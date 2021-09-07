@@ -1,13 +1,16 @@
 package com.mamazinha.profile.service;
 
-import com.mamazinha.profile.domain.Profile;
-import com.mamazinha.profile.repository.ProfileRepository;
-import com.mamazinha.profile.service.dto.ProfileDTO;
-import com.mamazinha.profile.service.mapper.ProfileMapper;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import com.mamazinha.profile.domain.Profile;
+import com.mamazinha.profile.repository.ProfileRepository;
+import com.mamazinha.profile.repository.UserRepository;
+import com.mamazinha.profile.service.dto.ProfileDTO;
+import com.mamazinha.profile.service.mapper.ProfileMapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,9 +29,13 @@ public class ProfileService {
 
     private final ProfileMapper profileMapper;
 
-    public ProfileService(ProfileRepository profileRepository, ProfileMapper profileMapper) {
+    private final UserRepository userRepository;
+
+    public ProfileService(ProfileRepository profileRepository, ProfileMapper profileMapper,
+            UserRepository userRepository) {
         this.profileRepository = profileRepository;
         this.profileMapper = profileMapper;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -40,6 +47,10 @@ public class ProfileService {
     public ProfileDTO save(ProfileDTO profileDTO) {
         log.debug("Request to save Profile : {}", profileDTO);
         Profile profile = profileMapper.toEntity(profileDTO);
+        if (profile.getUser() != null) {
+            // Save user in case it's new and only exists in gateway
+            userRepository.saveAndFlush(profile.getUser());
+        }
         profile = profileRepository.save(profile);
         return profileMapper.toDto(profile);
     }
@@ -52,6 +63,11 @@ public class ProfileService {
      */
     public Optional<ProfileDTO> partialUpdate(ProfileDTO profileDTO) {
         log.debug("Request to partially update Profile : {}", profileDTO);
+        Profile profile = profileMapper.toEntity(profileDTO);
+        if (profile.getUser() != null) {
+            // Save user in case it's new and only exists in gateway
+            userRepository.saveAndFlush(profile.getUser());
+        }
 
         return profileRepository
             .findById(profileDTO.getId())
