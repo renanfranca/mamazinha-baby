@@ -1,0 +1,40 @@
+{
+  "name": "BreastFeed",
+  "fields": [
+    {
+      "fieldName": "start",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "end",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "pain",
+      "fieldType": "Pain",
+      "fieldValues": "NO_PAIN,DISCOMFORTING,DISTRESSING,INTENSE,UTTERLY_HORRIBLE,UNIMAGINABLE"
+    }
+  ],
+  "relationships": [
+    {
+      "relationshipType": "many-to-one",
+      "otherEntityName": "profile",
+      "otherEntityRelationshipName": "breastFeed",
+      "relationshipName": "profile",
+      "otherEntityField": "name"
+    }
+  ],
+  "entityTableName": "breast_feed",
+  "dto": "mapstruct",
+  "pagination": "no",
+  "service": "serviceClass",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": ["gateway", "profile"],
+  "microserviceName": "profile",
+  "clientRootFolder": "profile",
+  "databaseType": "sql",
+  "changelogDate": "20210907152300"
+}

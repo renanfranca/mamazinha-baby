@@ -1,0 +1,39 @@
+{
+  "name": "Weight",
+  "fields": [
+    {
+      "fieldName": "value",
+      "fieldType": "Float"
+    },
+    {
+      "fieldName": "date",
+      "fieldType": "LocalDate"
+    },
+    {
+      "fieldName": "idealWight",
+      "fieldType": "Float"
+    }
+  ],
+  "relationships": [
+    {
+      "relationshipType": "many-to-one",
+      "otherEntityName": "profile",
+      "otherEntityRelationshipName": "weight",
+      "relationshipName": "profile",
+      "otherEntityField": "name"
+    }
+  ],
+  "entityTableName": "weight",
+  "dto": "mapstruct",
+  "pagination": "no",
+  "service": "serviceClass",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": ["gateway", "profile"],
+  "microserviceName": "profile",
+  "clientRootFolder": "profile",
+  "databaseType": "sql",
+  "changelogDate": "20210907152800"
+}

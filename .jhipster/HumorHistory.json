@@ -1,0 +1,36 @@
+{
+  "name": "HumorHistory",
+  "fields": [
+    {
+      "fieldName": "humor",
+      "fieldType": "Humor",
+      "fieldValues": "ANGRY,SAD,CALM,HAPPY,EXCITED"
+    },
+    {
+      "fieldName": "date",
+      "fieldType": "ZonedDateTime"
+    }
+  ],
+  "relationships": [
+    {
+      "relationshipType": "many-to-one",
+      "otherEntityName": "profile",
+      "otherEntityRelationshipName": "humorHistory",
+      "relationshipName": "profile",
+      "otherEntityField": "name"
+    }
+  ],
+  "entityTableName": "humor_history",
+  "dto": "mapstruct",
+  "pagination": "no",
+  "service": "serviceClass",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": ["gateway", "profile"],
+  "microserviceName": "profile",
+  "clientRootFolder": "profile",
+  "databaseType": "sql",
+  "changelogDate": "20210907152500"
+}

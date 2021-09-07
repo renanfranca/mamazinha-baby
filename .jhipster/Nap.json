@@ -1,0 +1,45 @@
+{
+  "name": "Nap",
+  "fields": [
+    {
+      "fieldName": "start",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "end",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "humor",
+      "fieldType": "Humor",
+      "fieldValues": "ANGRY,SAD,CALM,HAPPY,EXCITED"
+    },
+    {
+      "fieldName": "place",
+      "fieldType": "Place",
+      "fieldValues": "LAP,BABY_CRIB,CART,BABY_CONFORT"
+    }
+  ],
+  "relationships": [
+    {
+      "relationshipType": "many-to-one",
+      "otherEntityName": "profile",
+      "otherEntityRelationshipName": "nap",
+      "relationshipName": "profile",
+      "otherEntityField": "name"
+    }
+  ],
+  "entityTableName": "nap",
+  "dto": "mapstruct",
+  "pagination": "no",
+  "service": "serviceClass",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": ["gateway", "profile"],
+  "microserviceName": "profile",
+  "clientRootFolder": "profile",
+  "databaseType": "sql",
+  "changelogDate": "20210907152600"
+}
