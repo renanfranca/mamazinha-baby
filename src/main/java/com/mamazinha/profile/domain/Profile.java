@@ -37,8 +37,7 @@ public class Profile implements Serializable {
     @Column(name = "sign")
     private String sign;
 
-    @OneToOne
-    @JoinColumn(unique = true)
+    @ManyToOne
     private User user;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here

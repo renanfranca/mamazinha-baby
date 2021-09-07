@@ -30,7 +30,7 @@
                 <constraints nullable="true" />
             </column>
             <column name="user_id" type="varchar(100)">
-                <constraints nullable="true" unique="true" uniqueConstraintName="ux_profile__user_id" />
+                <constraints nullable="true" />
             </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>

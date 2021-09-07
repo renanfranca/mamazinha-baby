@@ -21,12 +21,11 @@
   ],
   "relationships": [
     {
-      "relationshipType": "one-to-one",
+      "relationshipType": "many-to-one",
       "otherEntityName": "user",
       "otherEntityRelationshipName": "profile",
       "relationshipName": "user",
-      "otherEntityField": "login",
-      "ownerSide": true
+      "otherEntityField": "login"
     }
   ],
   "entityTableName": "profile",
@@ -39,7 +38,7 @@
   "embedded": false,
   "applications": ["gateway", "profile"],
   "microserviceName": "profile",
+  "changelogDate": "20210907152700",
   "clientRootFolder": "profile",
-  "databaseType": "sql",
-  "changelogDate": "20210907152700"
+  "databaseType": "sql"
 }

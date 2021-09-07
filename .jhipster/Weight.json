@@ -33,7 +33,7 @@
   "embedded": false,
   "applications": ["gateway", "profile"],
   "microserviceName": "profile",
+  "changelogDate": "20210907152800",
   "clientRootFolder": "profile",
-  "databaseType": "sql",
-  "changelogDate": "20210907152800"
+  "databaseType": "sql"
 }
