@@ -32,9 +32,9 @@
   "fluentMethods": true,
   "readOnly": false,
   "embedded": false,
-  "applications": ["gateway", "babyprofile"],
-  "microserviceName": "babyprofile",
-  "clientRootFolder": "babyprofile",
+  "applications": ["gateway", "baby"],
+  "microserviceName": "baby",
+  "clientRootFolder": "baby",
   "databaseType": "sql",
-  "changelogDate": "20210911143551"
+  "changelogDate": "20210911191107"
 }

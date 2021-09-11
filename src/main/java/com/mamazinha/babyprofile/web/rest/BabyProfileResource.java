@@ -9,6 +9,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +34,7 @@ public class BabyProfileResource {
 
     private final Logger log = LoggerFactory.getLogger(BabyProfileResource.class);
 
-    private static final String ENTITY_NAME = "babyprofileBabyProfile";
+    private static final String ENTITY_NAME = "babyBabyProfile";
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
@@ -54,7 +56,7 @@ public class BabyProfileResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/baby-profiles")
-    public ResponseEntity<BabyProfileDTO> createBabyProfile(@RequestBody BabyProfileDTO babyProfileDTO) throws URISyntaxException {
+    public ResponseEntity<BabyProfileDTO> createBabyProfile(@Valid @RequestBody BabyProfileDTO babyProfileDTO) throws URISyntaxException {
         log.debug("REST request to save BabyProfile : {}", babyProfileDTO);
         if (babyProfileDTO.getId() != null) {
             throw new BadRequestAlertException("A new babyProfile cannot already have an ID", ENTITY_NAME, "idexists");
@@ -79,7 +81,7 @@ public class BabyProfileResource {
     @PutMapping("/baby-profiles/{id}")
     public ResponseEntity<BabyProfileDTO> updateBabyProfile(
         @PathVariable(value = "id", required = false) final Long id,
-        @RequestBody BabyProfileDTO babyProfileDTO
+        @Valid @RequestBody BabyProfileDTO babyProfileDTO
     ) throws URISyntaxException {
         log.debug("REST request to update BabyProfile : {}, {}", id, babyProfileDTO);
         if (babyProfileDTO.getId() == null) {
@@ -114,7 +116,7 @@ public class BabyProfileResource {
     @PatchMapping(value = "/baby-profiles/{id}", consumes = "application/merge-patch+json")
     public ResponseEntity<BabyProfileDTO> partialUpdateBabyProfile(
         @PathVariable(value = "id", required = false) final Long id,
-        @RequestBody BabyProfileDTO babyProfileDTO
+        @NotNull @RequestBody BabyProfileDTO babyProfileDTO
     ) throws URISyntaxException {
         log.debug("REST request to partial update BabyProfile partially : {}, {}", id, babyProfileDTO);
         if (babyProfileDTO.getId() == null) {

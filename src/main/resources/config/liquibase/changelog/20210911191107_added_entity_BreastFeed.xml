@@ -7,34 +7,29 @@
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
     <!--
-        Added the entity BabyProfile.
+        Added the entity BreastFeed.
     -->
-    <changeSet id="20210911143451-1" author="jhipster">
-        <createTable tableName="baby_profile">
+    <changeSet id="20210911191107-1" author="jhipster">
+        <createTable tableName="breast_feed">
             <column name="id" type="bigint">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="name" type="varchar(255)">
+            <column name="start" type="${datetimeType}">
                 <constraints nullable="true" />
             </column>
-            <column name="picture" type="longblob">
+            <column name="jhi_end" type="${datetimeType}">
                 <constraints nullable="true" />
             </column>
-            <column name="picture_content_type" type="varchar(255)">
+            <column name="pain" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
-            <column name="birthday" type="${datetimeType}">
-                <constraints nullable="true" />
-            </column>
-            <column name="sign" type="varchar(255)">
-                <constraints nullable="true" />
-            </column>
-            <column name="user_id" type="varchar(255)">
+            <column name="baby_profile_id" type="bigint">
                 <constraints nullable="true" />
             </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
-        <dropDefaultValue tableName="baby_profile" columnName="birthday" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="breast_feed" columnName="start" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="breast_feed" columnName="jhi_end" columnDataType="${datetimeType}"/>
     </changeSet>
 
     <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
@@ -47,18 +42,15 @@
           This can be customized by adding or removing 'faker' in the 'spring.liquibase.contexts'
           Spring Boot configuration key.
     -->
-    <changeSet id="20210911143451-1-data" author="jhipster" context="faker">
+    <changeSet id="20210911191107-1-data" author="jhipster" context="faker">
         <loadData
-                  file="config/liquibase/fake-data/baby_profile.csv"
+                  file="config/liquibase/fake-data/breast_feed.csv"
                   separator=";"
-                  tableName="baby_profile">
+                  tableName="breast_feed">
             <column name="id" type="numeric"/>
-            <column name="name" type="string"/>
-            <column name="picture" type="blob"/>
-            <column name="picture_content_type" type="string"/>
-            <column name="birthday" type="${datetimeType}"/>
-            <column name="sign" type="string"/>
-            <column name="user_id" type="string"/>
+            <column name="start" type="${datetimeType}"/>
+            <column name="jhi_end" type="${datetimeType}"/>
+            <column name="pain" type="string"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>

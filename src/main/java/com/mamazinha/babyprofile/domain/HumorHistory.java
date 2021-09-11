@@ -1,6 +1,5 @@
 package com.mamazinha.babyprofile.domain;
 
-import com.mamazinha.babyprofile.domain.enumeration.Humor;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 import javax.persistence.*;
@@ -22,15 +21,14 @@ public class HumorHistory implements Serializable {
     @SequenceGenerator(name = "sequenceGenerator")
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "humor")
-    private Humor humor;
-
     @Column(name = "date")
     private ZonedDateTime date;
 
     @ManyToOne
     private BabyProfile babyProfile;
+
+    @ManyToOne
+    private Humor humor;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
     public Long getId() {
@@ -44,19 +42,6 @@ public class HumorHistory implements Serializable {
     public HumorHistory id(Long id) {
         this.id = id;
         return this;
-    }
-
-    public Humor getHumor() {
-        return this.humor;
-    }
-
-    public HumorHistory humor(Humor humor) {
-        this.humor = humor;
-        return this;
-    }
-
-    public void setHumor(Humor humor) {
-        this.humor = humor;
     }
 
     public ZonedDateTime getDate() {
@@ -85,6 +70,19 @@ public class HumorHistory implements Serializable {
         this.babyProfile = babyProfile;
     }
 
+    public Humor getHumor() {
+        return this.humor;
+    }
+
+    public HumorHistory humor(Humor humor) {
+        this.setHumor(humor);
+        return this;
+    }
+
+    public void setHumor(Humor humor) {
+        this.humor = humor;
+    }
+
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
 
     @Override
@@ -109,7 +107,6 @@ public class HumorHistory implements Serializable {
     public String toString() {
         return "HumorHistory{" +
             "id=" + getId() +
-            ", humor='" + getHumor() + "'" +
             ", date='" + getDate() + "'" +
             "}";
     }

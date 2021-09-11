@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.mamazinha.babyprofile.IntegrationTest;
 import com.mamazinha.babyprofile.domain.Nap;
-import com.mamazinha.babyprofile.domain.enumeration.Humor;
 import com.mamazinha.babyprofile.domain.enumeration.Place;
 import com.mamazinha.babyprofile.repository.NapRepository;
 import com.mamazinha.babyprofile.service.dto.NapDTO;
@@ -44,9 +43,6 @@ class NapResourceIT {
     private static final ZonedDateTime DEFAULT_END = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
     private static final ZonedDateTime UPDATED_END = ZonedDateTime.now(ZoneId.systemDefault()).withNano(0);
 
-    private static final Humor DEFAULT_HUMOR = Humor.ANGRY;
-    private static final Humor UPDATED_HUMOR = Humor.SAD;
-
     private static final Place DEFAULT_PLACE = Place.LAP;
     private static final Place UPDATED_PLACE = Place.BABY_CRIB;
 
@@ -77,7 +73,7 @@ class NapResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static Nap createEntity(EntityManager em) {
-        Nap nap = new Nap().start(DEFAULT_START).end(DEFAULT_END).humor(DEFAULT_HUMOR).place(DEFAULT_PLACE);
+        Nap nap = new Nap().start(DEFAULT_START).end(DEFAULT_END).place(DEFAULT_PLACE);
         return nap;
     }
 
@@ -88,7 +84,7 @@ class NapResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static Nap createUpdatedEntity(EntityManager em) {
-        Nap nap = new Nap().start(UPDATED_START).end(UPDATED_END).humor(UPDATED_HUMOR).place(UPDATED_PLACE);
+        Nap nap = new Nap().start(UPDATED_START).end(UPDATED_END).place(UPDATED_PLACE);
         return nap;
     }
 
@@ -113,7 +109,6 @@ class NapResourceIT {
         Nap testNap = napList.get(napList.size() - 1);
         assertThat(testNap.getStart()).isEqualTo(DEFAULT_START);
         assertThat(testNap.getEnd()).isEqualTo(DEFAULT_END);
-        assertThat(testNap.getHumor()).isEqualTo(DEFAULT_HUMOR);
         assertThat(testNap.getPlace()).isEqualTo(DEFAULT_PLACE);
     }
 
@@ -150,7 +145,6 @@ class NapResourceIT {
             .andExpect(jsonPath("$.[*].id").value(hasItem(nap.getId().intValue())))
             .andExpect(jsonPath("$.[*].start").value(hasItem(sameInstant(DEFAULT_START))))
             .andExpect(jsonPath("$.[*].end").value(hasItem(sameInstant(DEFAULT_END))))
-            .andExpect(jsonPath("$.[*].humor").value(hasItem(DEFAULT_HUMOR.toString())))
             .andExpect(jsonPath("$.[*].place").value(hasItem(DEFAULT_PLACE.toString())));
     }
 
@@ -168,7 +162,6 @@ class NapResourceIT {
             .andExpect(jsonPath("$.id").value(nap.getId().intValue()))
             .andExpect(jsonPath("$.start").value(sameInstant(DEFAULT_START)))
             .andExpect(jsonPath("$.end").value(sameInstant(DEFAULT_END)))
-            .andExpect(jsonPath("$.humor").value(DEFAULT_HUMOR.toString()))
             .andExpect(jsonPath("$.place").value(DEFAULT_PLACE.toString()));
     }
 
@@ -191,7 +184,7 @@ class NapResourceIT {
         Nap updatedNap = napRepository.findById(nap.getId()).get();
         // Disconnect from session so that the updates on updatedNap are not directly saved in db
         em.detach(updatedNap);
-        updatedNap.start(UPDATED_START).end(UPDATED_END).humor(UPDATED_HUMOR).place(UPDATED_PLACE);
+        updatedNap.start(UPDATED_START).end(UPDATED_END).place(UPDATED_PLACE);
         NapDTO napDTO = napMapper.toDto(updatedNap);
 
         restNapMockMvc
@@ -208,7 +201,6 @@ class NapResourceIT {
         Nap testNap = napList.get(napList.size() - 1);
         assertThat(testNap.getStart()).isEqualTo(UPDATED_START);
         assertThat(testNap.getEnd()).isEqualTo(UPDATED_END);
-        assertThat(testNap.getHumor()).isEqualTo(UPDATED_HUMOR);
         assertThat(testNap.getPlace()).isEqualTo(UPDATED_PLACE);
     }
 
@@ -289,7 +281,7 @@ class NapResourceIT {
         Nap partialUpdatedNap = new Nap();
         partialUpdatedNap.setId(nap.getId());
 
-        partialUpdatedNap.start(UPDATED_START).end(UPDATED_END).humor(UPDATED_HUMOR).place(UPDATED_PLACE);
+        partialUpdatedNap.start(UPDATED_START).end(UPDATED_END).place(UPDATED_PLACE);
 
         restNapMockMvc
             .perform(
@@ -305,7 +297,6 @@ class NapResourceIT {
         Nap testNap = napList.get(napList.size() - 1);
         assertThat(testNap.getStart()).isEqualTo(UPDATED_START);
         assertThat(testNap.getEnd()).isEqualTo(UPDATED_END);
-        assertThat(testNap.getHumor()).isEqualTo(UPDATED_HUMOR);
         assertThat(testNap.getPlace()).isEqualTo(UPDATED_PLACE);
     }
 
@@ -321,7 +312,7 @@ class NapResourceIT {
         Nap partialUpdatedNap = new Nap();
         partialUpdatedNap.setId(nap.getId());
 
-        partialUpdatedNap.start(UPDATED_START).end(UPDATED_END).humor(UPDATED_HUMOR).place(UPDATED_PLACE);
+        partialUpdatedNap.start(UPDATED_START).end(UPDATED_END).place(UPDATED_PLACE);
 
         restNapMockMvc
             .perform(
@@ -337,7 +328,6 @@ class NapResourceIT {
         Nap testNap = napList.get(napList.size() - 1);
         assertThat(testNap.getStart()).isEqualTo(UPDATED_START);
         assertThat(testNap.getEnd()).isEqualTo(UPDATED_END);
-        assertThat(testNap.getHumor()).isEqualTo(UPDATED_HUMOR);
         assertThat(testNap.getPlace()).isEqualTo(UPDATED_PLACE);
     }
 

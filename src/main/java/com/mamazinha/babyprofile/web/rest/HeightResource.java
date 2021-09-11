@@ -9,6 +9,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +34,7 @@ public class HeightResource {
 
     private final Logger log = LoggerFactory.getLogger(HeightResource.class);
 
-    private static final String ENTITY_NAME = "babyprofileHeight";
+    private static final String ENTITY_NAME = "babyHeight";
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
@@ -54,7 +56,7 @@ public class HeightResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/heights")
-    public ResponseEntity<HeightDTO> createHeight(@RequestBody HeightDTO heightDTO) throws URISyntaxException {
+    public ResponseEntity<HeightDTO> createHeight(@Valid @RequestBody HeightDTO heightDTO) throws URISyntaxException {
         log.debug("REST request to save Height : {}", heightDTO);
         if (heightDTO.getId() != null) {
             throw new BadRequestAlertException("A new height cannot already have an ID", ENTITY_NAME, "idexists");
@@ -79,7 +81,7 @@ public class HeightResource {
     @PutMapping("/heights/{id}")
     public ResponseEntity<HeightDTO> updateHeight(
         @PathVariable(value = "id", required = false) final Long id,
-        @RequestBody HeightDTO heightDTO
+        @Valid @RequestBody HeightDTO heightDTO
     ) throws URISyntaxException {
         log.debug("REST request to update Height : {}, {}", id, heightDTO);
         if (heightDTO.getId() == null) {
@@ -114,7 +116,7 @@ public class HeightResource {
     @PatchMapping(value = "/heights/{id}", consumes = "application/merge-patch+json")
     public ResponseEntity<HeightDTO> partialUpdateHeight(
         @PathVariable(value = "id", required = false) final Long id,
-        @RequestBody HeightDTO heightDTO
+        @NotNull @RequestBody HeightDTO heightDTO
     ) throws URISyntaxException {
         log.debug("REST request to partial update Height partially : {}, {}", id, heightDTO);
         if (heightDTO.getId() == null) {

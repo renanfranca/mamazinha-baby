@@ -49,6 +49,7 @@ public class CacheConfiguration {
             createCache(cm, com.mamazinha.babyprofile.domain.BabyProfile.class.getName());
             createCache(cm, com.mamazinha.babyprofile.domain.BreastFeed.class.getName());
             createCache(cm, com.mamazinha.babyprofile.domain.Height.class.getName());
+            createCache(cm, com.mamazinha.babyprofile.domain.Humor.class.getName());
             createCache(cm, com.mamazinha.babyprofile.domain.HumorHistory.class.getName());
             createCache(cm, com.mamazinha.babyprofile.domain.Nap.class.getName());
             createCache(cm, com.mamazinha.babyprofile.domain.Weight.class.getName());

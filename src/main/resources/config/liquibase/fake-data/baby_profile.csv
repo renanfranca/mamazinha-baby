@@ -1,11 +1,11 @@
-id;name;picture;picture_content_type;birthday;sign;user_id
-1;evolve deposit asynchronous;../fake-data/blob/hipster.png;image/png;2021-09-11T10:25:07;state Camiseta Communications;circuit Reverse-engineered infomediaries
-2;Síria;../fake-data/blob/hipster.png;image/png;2021-09-10T20:05:08;caramelo system bottom-line;Pequeno
-3;mão Toalhas;../fake-data/blob/hipster.png;image/png;2021-09-10T18:51:59;invoice function Índia;vertical
-4;Gostoso Madeira;../fake-data/blob/hipster.png;image/png;2021-09-10T21:24:56;deposit;calculating de navigating
-5;Metal payment Esportes;../fake-data/blob/hipster.png;image/png;2021-09-11T01:53:50;Monitored;Frango synthesizing
-6;International;../fake-data/blob/hipster.png;image/png;2021-09-11T04:46:33;Strategist Marginal;enterprise artificial pele
-7;connect;../fake-data/blob/hipster.png;image/png;2021-09-11T12:43:22;backing;hack
-8;moratorium;../fake-data/blob/hipster.png;image/png;2021-09-11T05:23:59;microchip Kwanza Devolved;Namibia wireless Savings
-9;Ferramentas Toalhas Avenida;../fake-data/blob/hipster.png;image/png;2021-09-10T23:19:54;synthesizing cobre;functionalities Grosso Ferramentas
-10;Ameliorated;../fake-data/blob/hipster.png;image/png;2021-09-11T11:07:58;bottom-line;pricing
+id;name;picture;picture_content_type;birthday;sign;main;user_id
+1;evolve deposit asynchronous;../fake-data/blob/hipster.png;image/png;2021-09-11T15:00:23;state Camiseta Communications;true;Chapéu
+2;ADP bypass HDD;../fake-data/blob/hipster.png;image/png;2021-09-10T23:09:34;Vision-oriented;false;bottom-line Aço
+3;circuit;../fake-data/blob/hipster.png;image/png;2021-09-11T05:45:58;Chade;true;Director harness
+4;Madeira Industrial;../fake-data/blob/hipster.png;image/png;2021-09-11T17:16:02;web-readiness Granito panel;false;optical Sapatos
+5;payment Riel;../fake-data/blob/hipster.png;image/png;2021-09-11T03:37:00;Esportes;true;Monitored
+6;Frango synthesizing;../fake-data/blob/hipster.png;image/png;2021-09-11T16:31:37;SDR Cambridgeshire Monitored;true;enterprise artificial pele
+7;connect;../fake-data/blob/hipster.png;image/png;2021-09-11T17:18:38;backing;false;Concreto moratorium extend
+8;Roupas;../fake-data/blob/hipster.png;image/png;2021-09-10T23:56:29;Camiseta;true;coral seamless compelling
+9;Bahia Saúde;../fake-data/blob/hipster.png;image/png;2021-09-11T04:12:30;Account Manager;true;functionalities Grosso Ferramentas
+10;Ameliorated;../fake-data/blob/hipster.png;image/png;2021-09-11T15:43:14;bottom-line;false;index

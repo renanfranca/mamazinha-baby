@@ -9,6 +9,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +34,7 @@ public class WeightResource {
 
     private final Logger log = LoggerFactory.getLogger(WeightResource.class);
 
-    private static final String ENTITY_NAME = "babyprofileWeight";
+    private static final String ENTITY_NAME = "babyWeight";
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
@@ -54,7 +56,7 @@ public class WeightResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/weights")
-    public ResponseEntity<WeightDTO> createWeight(@RequestBody WeightDTO weightDTO) throws URISyntaxException {
+    public ResponseEntity<WeightDTO> createWeight(@Valid @RequestBody WeightDTO weightDTO) throws URISyntaxException {
         log.debug("REST request to save Weight : {}", weightDTO);
         if (weightDTO.getId() != null) {
             throw new BadRequestAlertException("A new weight cannot already have an ID", ENTITY_NAME, "idexists");
@@ -79,7 +81,7 @@ public class WeightResource {
     @PutMapping("/weights/{id}")
     public ResponseEntity<WeightDTO> updateWeight(
         @PathVariable(value = "id", required = false) final Long id,
-        @RequestBody WeightDTO weightDTO
+        @Valid @RequestBody WeightDTO weightDTO
     ) throws URISyntaxException {
         log.debug("REST request to update Weight : {}, {}", id, weightDTO);
         if (weightDTO.getId() == null) {
@@ -114,7 +116,7 @@ public class WeightResource {
     @PatchMapping(value = "/weights/{id}", consumes = "application/merge-patch+json")
     public ResponseEntity<WeightDTO> partialUpdateWeight(
         @PathVariable(value = "id", required = false) final Long id,
-        @RequestBody WeightDTO weightDTO
+        @NotNull @RequestBody WeightDTO weightDTO
     ) throws URISyntaxException {
         log.debug("REST request to partial update Weight partially : {}, {}", id, weightDTO);
         if (weightDTO.getId() == null) {

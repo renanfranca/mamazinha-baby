@@ -32,7 +32,7 @@ public class NapResource {
 
     private final Logger log = LoggerFactory.getLogger(NapResource.class);
 
-    private static final String ENTITY_NAME = "babyprofileNap";
+    private static final String ENTITY_NAME = "babyNap";
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;

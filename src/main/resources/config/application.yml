@@ -24,8 +24,8 @@ eureka:
     instance-info-replication-interval-seconds: 10
     registry-fetch-interval-seconds: 10
   instance:
-    appname: babyprofile
-    instanceId: babyprofile:${spring.application.instance-id:${random.value}}
+    appname: baby
+    instanceId: baby:${spring.application.instance-id:${random.value}}
     lease-renewal-interval-in-seconds: 5
     lease-expiration-duration-in-seconds: 10
     status-page-url-path: ${management.endpoints.web.base-path}/info
@@ -112,7 +112,7 @@ management:
 
 spring:
   application:
-    name: babyprofile
+    name: baby
   profiles:
     # The commented value for `active` can be replaced with valid Spring profiles to load.
     # Otherwise, it will be filled in by maven when building the JAR file
@@ -156,13 +156,13 @@ spring:
     allow-bean-definition-overriding: true
   task:
     execution:
-      thread-name-prefix: babyprofile-task-
+      thread-name-prefix: baby-task-
       pool:
         core-size: 2
         max-size: 50
         queue-capacity: 10000
     scheduling:
-      thread-name-prefix: babyprofile-scheduling-
+      thread-name-prefix: baby-scheduling-
       pool:
         size: 2
   thymeleaf:
@@ -190,7 +190,7 @@ info:
 
 jhipster:
   clientApp:
-    name: 'babyprofileApp'
+    name: 'babyApp'
   # By default CORS is disabled. Uncomment to enable.
   # cors:
   #   allowed-origins: "http://localhost:8100,http://localhost:9000"
@@ -200,12 +200,12 @@ jhipster:
   #   allow-credentials: true
   #   max-age: 1800
   mail:
-    from: babyprofile@localhost
+    from: baby@localhost
   api-docs:
     default-include-pattern: ${server.servlet.context-path:}/api/.*
     management-include-pattern: ${server.servlet.context-path:}/management/.*
-    title: babyprofile API
-    description: babyprofile API documentation
+    title: baby API
+    description: baby API documentation
     version: 0.0.1
     terms-of-service-url:
     contact-name:

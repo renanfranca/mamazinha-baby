@@ -7,8 +7,9 @@ import org.mapstruct.*;
 /**
  * Mapper for the entity {@link HumorHistory} and its DTO {@link HumorHistoryDTO}.
  */
-@Mapper(componentModel = "spring", uses = { BabyProfileMapper.class })
+@Mapper(componentModel = "spring", uses = { BabyProfileMapper.class, HumorMapper.class })
 public interface HumorHistoryMapper extends EntityMapper<HumorHistoryDTO, HumorHistory> {
     @Mapping(target = "babyProfile", source = "babyProfile", qualifiedByName = "name")
+    @Mapping(target = "humor", source = "humor", qualifiedByName = "description")
     HumorHistoryDTO toDto(HumorHistory s);
 }

@@ -1,6 +1,5 @@
 package com.mamazinha.babyprofile.service.dto;
 
-import com.mamazinha.babyprofile.domain.enumeration.Humor;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -12,11 +11,11 @@ public class HumorHistoryDTO implements Serializable {
 
     private Long id;
 
-    private Humor humor;
-
     private ZonedDateTime date;
 
     private BabyProfileDTO babyProfile;
+
+    private HumorDTO humor;
 
     public Long getId() {
         return id;
@@ -24,14 +23,6 @@ public class HumorHistoryDTO implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Humor getHumor() {
-        return humor;
-    }
-
-    public void setHumor(Humor humor) {
-        this.humor = humor;
     }
 
     public ZonedDateTime getDate() {
@@ -48,6 +39,14 @@ public class HumorHistoryDTO implements Serializable {
 
     public void setBabyProfile(BabyProfileDTO babyProfile) {
         this.babyProfile = babyProfile;
+    }
+
+    public HumorDTO getHumor() {
+        return humor;
+    }
+
+    public void setHumor(HumorDTO humor) {
+        this.humor = humor;
     }
 
     @Override
@@ -76,9 +75,9 @@ public class HumorHistoryDTO implements Serializable {
     public String toString() {
         return "HumorHistoryDTO{" +
             "id=" + getId() +
-            ", humor='" + getHumor() + "'" +
             ", date='" + getDate() + "'" +
             ", babyProfile=" + getBabyProfile() +
+            ", humor=" + getHumor() +
             "}";
     }
 }

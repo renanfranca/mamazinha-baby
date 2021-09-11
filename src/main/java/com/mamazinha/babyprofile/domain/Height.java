@@ -1,8 +1,9 @@
 package com.mamazinha.babyprofile.domain;
 
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import javax.persistence.*;
+import javax.validation.constraints.*;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -21,14 +22,13 @@ public class Height implements Serializable {
     @SequenceGenerator(name = "sequenceGenerator")
     private Long id;
 
-    @Column(name = "value")
-    private Float value;
+    @NotNull
+    @Column(name = "value", nullable = false)
+    private Double value;
 
-    @Column(name = "date")
-    private LocalDate date;
-
-    @Column(name = "ideal_wight")
-    private Float idealWight;
+    @NotNull
+    @Column(name = "date", nullable = false)
+    private ZonedDateTime date;
 
     @ManyToOne
     private BabyProfile babyProfile;
@@ -47,43 +47,30 @@ public class Height implements Serializable {
         return this;
     }
 
-    public Float getValue() {
+    public Double getValue() {
         return this.value;
     }
 
-    public Height value(Float value) {
+    public Height value(Double value) {
         this.value = value;
         return this;
     }
 
-    public void setValue(Float value) {
+    public void setValue(Double value) {
         this.value = value;
     }
 
-    public LocalDate getDate() {
+    public ZonedDateTime getDate() {
         return this.date;
     }
 
-    public Height date(LocalDate date) {
+    public Height date(ZonedDateTime date) {
         this.date = date;
         return this;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(ZonedDateTime date) {
         this.date = date;
-    }
-
-    public Float getIdealWight() {
-        return this.idealWight;
-    }
-
-    public Height idealWight(Float idealWight) {
-        this.idealWight = idealWight;
-        return this;
-    }
-
-    public void setIdealWight(Float idealWight) {
-        this.idealWight = idealWight;
     }
 
     public BabyProfile getBabyProfile() {
@@ -125,7 +112,6 @@ public class Height implements Serializable {
             "id=" + getId() +
             ", value=" + getValue() +
             ", date='" + getDate() + "'" +
-            ", idealWight=" + getIdealWight() +
             "}";
     }
 }

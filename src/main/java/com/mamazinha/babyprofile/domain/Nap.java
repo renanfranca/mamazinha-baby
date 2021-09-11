@@ -1,6 +1,5 @@
 package com.mamazinha.babyprofile.domain;
 
-import com.mamazinha.babyprofile.domain.enumeration.Humor;
 import com.mamazinha.babyprofile.domain.enumeration.Place;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
@@ -30,15 +29,14 @@ public class Nap implements Serializable {
     private ZonedDateTime end;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "humor")
-    private Humor humor;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "place")
     private Place place;
 
     @ManyToOne
     private BabyProfile babyProfile;
+
+    @ManyToOne
+    private Humor humor;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
     public Long getId() {
@@ -80,19 +78,6 @@ public class Nap implements Serializable {
         this.end = end;
     }
 
-    public Humor getHumor() {
-        return this.humor;
-    }
-
-    public Nap humor(Humor humor) {
-        this.humor = humor;
-        return this;
-    }
-
-    public void setHumor(Humor humor) {
-        this.humor = humor;
-    }
-
     public Place getPlace() {
         return this.place;
     }
@@ -117,6 +102,19 @@ public class Nap implements Serializable {
 
     public void setBabyProfile(BabyProfile babyProfile) {
         this.babyProfile = babyProfile;
+    }
+
+    public Humor getHumor() {
+        return this.humor;
+    }
+
+    public Nap humor(Humor humor) {
+        this.setHumor(humor);
+        return this;
+    }
+
+    public void setHumor(Humor humor) {
+        this.humor = humor;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
@@ -145,7 +143,6 @@ public class Nap implements Serializable {
             "id=" + getId() +
             ", start='" + getStart() + "'" +
             ", end='" + getEnd() + "'" +
-            ", humor='" + getHumor() + "'" +
             ", place='" + getPlace() + "'" +
             "}";
     }

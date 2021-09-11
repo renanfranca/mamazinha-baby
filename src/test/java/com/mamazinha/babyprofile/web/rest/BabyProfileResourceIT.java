@@ -51,6 +51,9 @@ class BabyProfileResourceIT {
     private static final String DEFAULT_SIGN = "AAAAAAAAAA";
     private static final String UPDATED_SIGN = "BBBBBBBBBB";
 
+    private static final Boolean DEFAULT_MAIN = false;
+    private static final Boolean UPDATED_MAIN = true;
+
     private static final String DEFAULT_USER_ID = "AAAAAAAAAA";
     private static final String UPDATED_USER_ID = "BBBBBBBBBB";
 
@@ -87,6 +90,7 @@ class BabyProfileResourceIT {
             .pictureContentType(DEFAULT_PICTURE_CONTENT_TYPE)
             .birthday(DEFAULT_BIRTHDAY)
             .sign(DEFAULT_SIGN)
+            .main(DEFAULT_MAIN)
             .userId(DEFAULT_USER_ID);
         return babyProfile;
     }
@@ -104,6 +108,7 @@ class BabyProfileResourceIT {
             .pictureContentType(UPDATED_PICTURE_CONTENT_TYPE)
             .birthday(UPDATED_BIRTHDAY)
             .sign(UPDATED_SIGN)
+            .main(UPDATED_MAIN)
             .userId(UPDATED_USER_ID);
         return babyProfile;
     }
@@ -134,6 +139,7 @@ class BabyProfileResourceIT {
         assertThat(testBabyProfile.getPictureContentType()).isEqualTo(DEFAULT_PICTURE_CONTENT_TYPE);
         assertThat(testBabyProfile.getBirthday()).isEqualTo(DEFAULT_BIRTHDAY);
         assertThat(testBabyProfile.getSign()).isEqualTo(DEFAULT_SIGN);
+        assertThat(testBabyProfile.getMain()).isEqualTo(DEFAULT_MAIN);
         assertThat(testBabyProfile.getUserId()).isEqualTo(DEFAULT_USER_ID);
     }
 
@@ -160,6 +166,66 @@ class BabyProfileResourceIT {
 
     @Test
     @Transactional
+    void checkNameIsRequired() throws Exception {
+        int databaseSizeBeforeTest = babyProfileRepository.findAll().size();
+        // set the field null
+        babyProfile.setName(null);
+
+        // Create the BabyProfile, which fails.
+        BabyProfileDTO babyProfileDTO = babyProfileMapper.toDto(babyProfile);
+
+        restBabyProfileMockMvc
+            .perform(
+                post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(babyProfileDTO))
+            )
+            .andExpect(status().isBadRequest());
+
+        List<BabyProfile> babyProfileList = babyProfileRepository.findAll();
+        assertThat(babyProfileList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
+    void checkBirthdayIsRequired() throws Exception {
+        int databaseSizeBeforeTest = babyProfileRepository.findAll().size();
+        // set the field null
+        babyProfile.setBirthday(null);
+
+        // Create the BabyProfile, which fails.
+        BabyProfileDTO babyProfileDTO = babyProfileMapper.toDto(babyProfile);
+
+        restBabyProfileMockMvc
+            .perform(
+                post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(babyProfileDTO))
+            )
+            .andExpect(status().isBadRequest());
+
+        List<BabyProfile> babyProfileList = babyProfileRepository.findAll();
+        assertThat(babyProfileList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
+    void checkUserIdIsRequired() throws Exception {
+        int databaseSizeBeforeTest = babyProfileRepository.findAll().size();
+        // set the field null
+        babyProfile.setUserId(null);
+
+        // Create the BabyProfile, which fails.
+        BabyProfileDTO babyProfileDTO = babyProfileMapper.toDto(babyProfile);
+
+        restBabyProfileMockMvc
+            .perform(
+                post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(babyProfileDTO))
+            )
+            .andExpect(status().isBadRequest());
+
+        List<BabyProfile> babyProfileList = babyProfileRepository.findAll();
+        assertThat(babyProfileList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
     void getAllBabyProfiles() throws Exception {
         // Initialize the database
         babyProfileRepository.saveAndFlush(babyProfile);
@@ -175,6 +241,7 @@ class BabyProfileResourceIT {
             .andExpect(jsonPath("$.[*].picture").value(hasItem(Base64Utils.encodeToString(DEFAULT_PICTURE))))
             .andExpect(jsonPath("$.[*].birthday").value(hasItem(sameInstant(DEFAULT_BIRTHDAY))))
             .andExpect(jsonPath("$.[*].sign").value(hasItem(DEFAULT_SIGN)))
+            .andExpect(jsonPath("$.[*].main").value(hasItem(DEFAULT_MAIN.booleanValue())))
             .andExpect(jsonPath("$.[*].userId").value(hasItem(DEFAULT_USER_ID)));
     }
 
@@ -195,6 +262,7 @@ class BabyProfileResourceIT {
             .andExpect(jsonPath("$.picture").value(Base64Utils.encodeToString(DEFAULT_PICTURE)))
             .andExpect(jsonPath("$.birthday").value(sameInstant(DEFAULT_BIRTHDAY)))
             .andExpect(jsonPath("$.sign").value(DEFAULT_SIGN))
+            .andExpect(jsonPath("$.main").value(DEFAULT_MAIN.booleanValue()))
             .andExpect(jsonPath("$.userId").value(DEFAULT_USER_ID));
     }
 
@@ -223,6 +291,7 @@ class BabyProfileResourceIT {
             .pictureContentType(UPDATED_PICTURE_CONTENT_TYPE)
             .birthday(UPDATED_BIRTHDAY)
             .sign(UPDATED_SIGN)
+            .main(UPDATED_MAIN)
             .userId(UPDATED_USER_ID);
         BabyProfileDTO babyProfileDTO = babyProfileMapper.toDto(updatedBabyProfile);
 
@@ -243,6 +312,7 @@ class BabyProfileResourceIT {
         assertThat(testBabyProfile.getPictureContentType()).isEqualTo(UPDATED_PICTURE_CONTENT_TYPE);
         assertThat(testBabyProfile.getBirthday()).isEqualTo(UPDATED_BIRTHDAY);
         assertThat(testBabyProfile.getSign()).isEqualTo(UPDATED_SIGN);
+        assertThat(testBabyProfile.getMain()).isEqualTo(UPDATED_MAIN);
         assertThat(testBabyProfile.getUserId()).isEqualTo(UPDATED_USER_ID);
     }
 
@@ -342,6 +412,7 @@ class BabyProfileResourceIT {
         assertThat(testBabyProfile.getPictureContentType()).isEqualTo(UPDATED_PICTURE_CONTENT_TYPE);
         assertThat(testBabyProfile.getBirthday()).isEqualTo(DEFAULT_BIRTHDAY);
         assertThat(testBabyProfile.getSign()).isEqualTo(DEFAULT_SIGN);
+        assertThat(testBabyProfile.getMain()).isEqualTo(DEFAULT_MAIN);
         assertThat(testBabyProfile.getUserId()).isEqualTo(DEFAULT_USER_ID);
     }
 
@@ -363,6 +434,7 @@ class BabyProfileResourceIT {
             .pictureContentType(UPDATED_PICTURE_CONTENT_TYPE)
             .birthday(UPDATED_BIRTHDAY)
             .sign(UPDATED_SIGN)
+            .main(UPDATED_MAIN)
             .userId(UPDATED_USER_ID);
 
         restBabyProfileMockMvc
@@ -382,6 +454,7 @@ class BabyProfileResourceIT {
         assertThat(testBabyProfile.getPictureContentType()).isEqualTo(UPDATED_PICTURE_CONTENT_TYPE);
         assertThat(testBabyProfile.getBirthday()).isEqualTo(UPDATED_BIRTHDAY);
         assertThat(testBabyProfile.getSign()).isEqualTo(UPDATED_SIGN);
+        assertThat(testBabyProfile.getMain()).isEqualTo(UPDATED_MAIN);
         assertThat(testBabyProfile.getUserId()).isEqualTo(UPDATED_USER_ID);
     }
 

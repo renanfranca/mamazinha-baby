@@ -32,7 +32,7 @@ public class BreastFeedResource {
 
     private final Logger log = LoggerFactory.getLogger(BreastFeedResource.class);
 
-    private static final String ENTITY_NAME = "babyprofileBreastFeed";
+    private static final String ENTITY_NAME = "babyBreastFeed";
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;

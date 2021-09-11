@@ -1,6 +1,5 @@
 package com.mamazinha.babyprofile.service.dto;
 
-import com.mamazinha.babyprofile.domain.enumeration.Humor;
 import com.mamazinha.babyprofile.domain.enumeration.Place;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
@@ -17,11 +16,11 @@ public class NapDTO implements Serializable {
 
     private ZonedDateTime end;
 
-    private Humor humor;
-
     private Place place;
 
     private BabyProfileDTO babyProfile;
+
+    private HumorDTO humor;
 
     public Long getId() {
         return id;
@@ -47,14 +46,6 @@ public class NapDTO implements Serializable {
         this.end = end;
     }
 
-    public Humor getHumor() {
-        return humor;
-    }
-
-    public void setHumor(Humor humor) {
-        this.humor = humor;
-    }
-
     public Place getPlace() {
         return place;
     }
@@ -69,6 +60,14 @@ public class NapDTO implements Serializable {
 
     public void setBabyProfile(BabyProfileDTO babyProfile) {
         this.babyProfile = babyProfile;
+    }
+
+    public HumorDTO getHumor() {
+        return humor;
+    }
+
+    public void setHumor(HumorDTO humor) {
+        this.humor = humor;
     }
 
     @Override
@@ -99,9 +98,9 @@ public class NapDTO implements Serializable {
             "id=" + getId() +
             ", start='" + getStart() + "'" +
             ", end='" + getEnd() + "'" +
-            ", humor='" + getHumor() + "'" +
             ", place='" + getPlace() + "'" +
             ", babyProfile=" + getBabyProfile() +
+            ", humor=" + getHumor() +
             "}";
     }
 }

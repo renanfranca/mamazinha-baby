@@ -1,7 +1,7 @@
 # This configuration is intended for development purpose, it's **your** responsibility to harden it for production
 version: '3.8'
 services:
-  babyprofile-prometheus:
+  baby-prometheus:
     image: prom/prometheus:v2.27.1
     volumes:
       - ./prometheus/:/etc/prometheus/
@@ -14,7 +14,7 @@ services:
     # On MacOS, remove next line and replace localhost by host.docker.internal in prometheus/prometheus.yml and
     # grafana/provisioning/datasources/datasource.yml
     network_mode: 'host' # to test locally running service
-  babyprofile-grafana:
+  baby-grafana:
     image: grafana/grafana:8.0.1
     volumes:
       - ./grafana/provisioning/:/etc/grafana/provisioning/

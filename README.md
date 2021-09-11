@@ -1,4 +1,4 @@
-# babyprofile
+# baby
 
 This application was generated using JHipster 7.1.0, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v7.1.0](https://www.jhipster.tech/documentation-archive/v7.1.0).
 
@@ -19,7 +19,7 @@ For further instructions on how to develop with JHipster, have a look at [Using 
 
 ### Packaging as jar
 
-To build the final jar and optimize the babyprofile application for production, run:
+To build the final jar and optimize the baby application for production, run:
 
 ```
 ./mvnw -Pprod clean verify

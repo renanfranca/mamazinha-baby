@@ -1,8 +1,9 @@
 package com.mamazinha.babyprofile.service.dto;
 
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.Objects;
+import javax.validation.constraints.*;
 
 /**
  * A DTO for the {@link com.mamazinha.babyprofile.domain.Weight} entity.
@@ -11,11 +12,11 @@ public class WeightDTO implements Serializable {
 
     private Long id;
 
-    private Float value;
+    @NotNull
+    private Double value;
 
-    private LocalDate date;
-
-    private Float idealWight;
+    @NotNull
+    private ZonedDateTime date;
 
     private BabyProfileDTO babyProfile;
 
@@ -27,28 +28,20 @@ public class WeightDTO implements Serializable {
         this.id = id;
     }
 
-    public Float getValue() {
+    public Double getValue() {
         return value;
     }
 
-    public void setValue(Float value) {
+    public void setValue(Double value) {
         this.value = value;
     }
 
-    public LocalDate getDate() {
+    public ZonedDateTime getDate() {
         return date;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(ZonedDateTime date) {
         this.date = date;
-    }
-
-    public Float getIdealWight() {
-        return idealWight;
-    }
-
-    public void setIdealWight(Float idealWight) {
-        this.idealWight = idealWight;
     }
 
     public BabyProfileDTO getBabyProfile() {
@@ -87,7 +80,6 @@ public class WeightDTO implements Serializable {
             "id=" + getId() +
             ", value=" + getValue() +
             ", date='" + getDate() + "'" +
-            ", idealWight=" + getIdealWight() +
             ", babyProfile=" + getBabyProfile() +
             "}";
     }

@@ -3,15 +3,13 @@
   "fields": [
     {
       "fieldName": "value",
-      "fieldType": "Float"
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
     },
     {
       "fieldName": "date",
-      "fieldType": "LocalDate"
-    },
-    {
-      "fieldName": "idealWight",
-      "fieldType": "Float"
+      "fieldType": "ZonedDateTime",
+      "fieldValidateRules": ["required"]
     }
   ],
   "relationships": [
@@ -31,9 +29,9 @@
   "fluentMethods": true,
   "readOnly": false,
   "embedded": false,
-  "applications": ["gateway", "babyprofile"],
-  "microserviceName": "babyprofile",
-  "clientRootFolder": "babyprofile",
+  "applications": ["gateway", "baby"],
+  "microserviceName": "baby",
+  "clientRootFolder": "baby",
   "databaseType": "sql",
-  "changelogDate": "20210911143651"
+  "changelogDate": "20210911191207"
 }

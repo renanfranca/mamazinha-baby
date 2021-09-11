@@ -20,18 +20,18 @@ import tech.jhipster.config.JHipsterConstants;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ LiquibaseProperties.class, ApplicationProperties.class })
-public class BabyprofileApp {
+public class BabyApp {
 
-    private static final Logger log = LoggerFactory.getLogger(BabyprofileApp.class);
+    private static final Logger log = LoggerFactory.getLogger(BabyApp.class);
 
     private final Environment env;
 
-    public BabyprofileApp(Environment env) {
+    public BabyApp(Environment env) {
         this.env = env;
     }
 
     /**
-     * Initializes babyprofile.
+     * Initializes baby.
      * <p>
      * Spring profiles can be configured with a program argument --spring.profiles.active=your-active-profile
      * <p>
@@ -64,7 +64,7 @@ public class BabyprofileApp {
      * @param args the command line arguments.
      */
     public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(BabyprofileApp.class);
+        SpringApplication app = new SpringApplication(BabyApp.class);
         DefaultProfileUtil.addDefaultProfile(app);
         Environment env = app.run(args).getEnvironment();
         logApplicationStartup(env);

@@ -32,7 +32,7 @@ public class HumorHistoryResource {
 
     private final Logger log = LoggerFactory.getLogger(HumorHistoryResource.class);
 
-    private static final String ENTITY_NAME = "babyprofileHumorHistory";
+    private static final String ENTITY_NAME = "babyHumorHistory";
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;

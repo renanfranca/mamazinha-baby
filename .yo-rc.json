@@ -5,7 +5,7 @@
     "serverPort": "8081",
     "serviceDiscoveryType": "eureka",
     "skipUserManagement": true,
-    "baseName": "babyprofile",
+    "baseName": "baby",
     "buildTool": "maven",
     "databaseType": "sql",
     "devDatabaseType": "h2Disk",
@@ -41,9 +41,9 @@
     "clientTheme": "none",
     "clientThemeVariant": "",
     "withAdminUi": false,
-    "creationTimestamp": 1631370831817,
-    "jwtSecretKey": "YmRmMmE4OWNlMWM0NmVhMmE2ODY2YTA3MGU4MTQ0ZjdkNDYzMGM5MTZkNDAwY2ExMGViZTUzYTk0NTE3ZDk1NWJhMmUxYjllZmUzNGIwMTEyOWQ1ZGY2Y2JkODM5ZTI0OWUwOWY3OTllNjdiMDVkNGMwYTBiNzEzZGI1YWZlNGI=",
-    "entities": ["BabyProfile", "BreastFeed", "Height", "HumorHistory", "Nap", "Weight"],
-    "lastLiquibaseTimestamp": 1631371191000
+    "creationTimestamp": 1631387347587,
+    "jwtSecretKey": "ZThjYjUxYjQ5NGU3MzQ5OGM2NjUxNDliZDNlZmU0ZmIxYzQ0MGJjNGU5MDQ5Yzc3OWZkNjI2MzY1NzhlNmQzNmM5NDY4OTUyNWYyNmZjZGNmMzQ0NDQ5NzVlOGU0MWM3NzNlYmMwZmMzMzRjZGY1YmQ4NjQ2MzhhNDkxNGVmMTY=",
+    "entities": ["BabyProfile", "BreastFeed", "Height", "Humor", "HumorHistory", "Nap", "Weight"],
+    "lastLiquibaseTimestamp": 1631387767000
   }
 }

@@ -6,12 +6,18 @@
     <!--
         Added the constraints for entity HumorHistory.
     -->
-    <changeSet id="20210911143751-2" author="jhipster">
+    <changeSet id="20210911191407-2" author="jhipster">
 
         <addForeignKeyConstraint baseColumnNames="baby_profile_id"
                                  baseTableName="humor_history"
                                  constraintName="fk_humor_history__baby_profile_id"
                                  referencedColumnNames="id"
                                  referencedTableName="baby_profile"/>
+
+        <addForeignKeyConstraint baseColumnNames="humor_id"
+                                 baseTableName="humor_history"
+                                 constraintName="fk_humor_history__humor_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="humor"/>
     </changeSet>
 </databaseChangeLog>

@@ -1,27 +1,25 @@
 {
-  "name": "Weight",
+  "name": "Humor",
   "fields": [
     {
       "fieldName": "value",
-      "fieldType": "Double",
+      "fieldType": "Integer",
+      "javadoc": "1 to 5  ANGRY, SAD, CALM, HAPPY, EXCITED",
       "fieldValidateRules": ["required"]
     },
     {
-      "fieldName": "date",
-      "fieldType": "ZonedDateTime",
+      "fieldName": "description",
+      "fieldType": "String",
       "fieldValidateRules": ["required"]
-    }
-  ],
-  "relationships": [
+    },
     {
-      "relationshipType": "many-to-one",
-      "otherEntityName": "babyProfile",
-      "otherEntityRelationshipName": "weight",
-      "relationshipName": "babyProfile",
-      "otherEntityField": "name"
+      "fieldName": "emotico",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "image"
     }
   ],
-  "entityTableName": "weight",
+  "relationships": [],
+  "entityTableName": "humor",
   "dto": "mapstruct",
   "pagination": "infinite-scroll",
   "service": "serviceClass",
@@ -33,5 +31,5 @@
   "microserviceName": "baby",
   "clientRootFolder": "baby",
   "databaseType": "sql",
-  "changelogDate": "20210911191607"
+  "changelogDate": "20210911191307"
 }

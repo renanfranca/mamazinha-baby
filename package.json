@@ -1,8 +1,8 @@
 {
-  "name": "babyprofile",
+  "name": "baby",
   "version": "0.0.0",
   "private": true,
-  "description": "Description for babyprofile",
+  "description": "Description for baby",
   "license": "UNLICENSED",
   "scripts": {
     "prettier:check": "prettier --check \"{,src/**/}*.{md,json,yml,html,java}\"",

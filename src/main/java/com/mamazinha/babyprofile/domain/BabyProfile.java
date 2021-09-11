@@ -3,6 +3,7 @@ package com.mamazinha.babyprofile.domain;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 import javax.persistence.*;
+import javax.validation.constraints.*;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -21,7 +22,8 @@ public class BabyProfile implements Serializable {
     @SequenceGenerator(name = "sequenceGenerator")
     private Long id;
 
-    @Column(name = "name")
+    @NotNull
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Lob
@@ -31,13 +33,18 @@ public class BabyProfile implements Serializable {
     @Column(name = "picture_content_type")
     private String pictureContentType;
 
-    @Column(name = "birthday")
+    @NotNull
+    @Column(name = "birthday", nullable = false)
     private ZonedDateTime birthday;
 
     @Column(name = "sign")
     private String sign;
 
-    @Column(name = "user_id")
+    @Column(name = "main")
+    private Boolean main;
+
+    @NotNull
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
@@ -119,6 +126,19 @@ public class BabyProfile implements Serializable {
         this.sign = sign;
     }
 
+    public Boolean getMain() {
+        return this.main;
+    }
+
+    public BabyProfile main(Boolean main) {
+        this.main = main;
+        return this;
+    }
+
+    public void setMain(Boolean main) {
+        this.main = main;
+    }
+
     public String getUserId() {
         return this.userId;
     }
@@ -161,6 +181,7 @@ public class BabyProfile implements Serializable {
             ", pictureContentType='" + getPictureContentType() + "'" +
             ", birthday='" + getBirthday() + "'" +
             ", sign='" + getSign() + "'" +
+            ", main='" + getMain() + "'" +
             ", userId='" + getUserId() + "'" +
             "}";
     }

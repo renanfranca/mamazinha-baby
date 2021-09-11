@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.mamazinha.babyprofile.IntegrationTest;
 import com.mamazinha.babyprofile.domain.HumorHistory;
-import com.mamazinha.babyprofile.domain.enumeration.Humor;
 import com.mamazinha.babyprofile.repository.HumorHistoryRepository;
 import com.mamazinha.babyprofile.service.dto.HumorHistoryDTO;
 import com.mamazinha.babyprofile.service.mapper.HumorHistoryMapper;
@@ -36,9 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @WithMockUser
 class HumorHistoryResourceIT {
-
-    private static final Humor DEFAULT_HUMOR = Humor.ANGRY;
-    private static final Humor UPDATED_HUMOR = Humor.SAD;
 
     private static final ZonedDateTime DEFAULT_DATE = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
     private static final ZonedDateTime UPDATED_DATE = ZonedDateTime.now(ZoneId.systemDefault()).withNano(0);
@@ -70,7 +66,7 @@ class HumorHistoryResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static HumorHistory createEntity(EntityManager em) {
-        HumorHistory humorHistory = new HumorHistory().humor(DEFAULT_HUMOR).date(DEFAULT_DATE);
+        HumorHistory humorHistory = new HumorHistory().date(DEFAULT_DATE);
         return humorHistory;
     }
 
@@ -81,7 +77,7 @@ class HumorHistoryResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static HumorHistory createUpdatedEntity(EntityManager em) {
-        HumorHistory humorHistory = new HumorHistory().humor(UPDATED_HUMOR).date(UPDATED_DATE);
+        HumorHistory humorHistory = new HumorHistory().date(UPDATED_DATE);
         return humorHistory;
     }
 
@@ -106,7 +102,6 @@ class HumorHistoryResourceIT {
         List<HumorHistory> humorHistoryList = humorHistoryRepository.findAll();
         assertThat(humorHistoryList).hasSize(databaseSizeBeforeCreate + 1);
         HumorHistory testHumorHistory = humorHistoryList.get(humorHistoryList.size() - 1);
-        assertThat(testHumorHistory.getHumor()).isEqualTo(DEFAULT_HUMOR);
         assertThat(testHumorHistory.getDate()).isEqualTo(DEFAULT_DATE);
     }
 
@@ -143,7 +138,6 @@ class HumorHistoryResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(humorHistory.getId().intValue())))
-            .andExpect(jsonPath("$.[*].humor").value(hasItem(DEFAULT_HUMOR.toString())))
             .andExpect(jsonPath("$.[*].date").value(hasItem(sameInstant(DEFAULT_DATE))));
     }
 
@@ -159,7 +153,6 @@ class HumorHistoryResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(humorHistory.getId().intValue()))
-            .andExpect(jsonPath("$.humor").value(DEFAULT_HUMOR.toString()))
             .andExpect(jsonPath("$.date").value(sameInstant(DEFAULT_DATE)));
     }
 
@@ -182,7 +175,7 @@ class HumorHistoryResourceIT {
         HumorHistory updatedHumorHistory = humorHistoryRepository.findById(humorHistory.getId()).get();
         // Disconnect from session so that the updates on updatedHumorHistory are not directly saved in db
         em.detach(updatedHumorHistory);
-        updatedHumorHistory.humor(UPDATED_HUMOR).date(UPDATED_DATE);
+        updatedHumorHistory.date(UPDATED_DATE);
         HumorHistoryDTO humorHistoryDTO = humorHistoryMapper.toDto(updatedHumorHistory);
 
         restHumorHistoryMockMvc
@@ -197,7 +190,6 @@ class HumorHistoryResourceIT {
         List<HumorHistory> humorHistoryList = humorHistoryRepository.findAll();
         assertThat(humorHistoryList).hasSize(databaseSizeBeforeUpdate);
         HumorHistory testHumorHistory = humorHistoryList.get(humorHistoryList.size() - 1);
-        assertThat(testHumorHistory.getHumor()).isEqualTo(UPDATED_HUMOR);
         assertThat(testHumorHistory.getDate()).isEqualTo(UPDATED_DATE);
     }
 
@@ -292,7 +284,6 @@ class HumorHistoryResourceIT {
         List<HumorHistory> humorHistoryList = humorHistoryRepository.findAll();
         assertThat(humorHistoryList).hasSize(databaseSizeBeforeUpdate);
         HumorHistory testHumorHistory = humorHistoryList.get(humorHistoryList.size() - 1);
-        assertThat(testHumorHistory.getHumor()).isEqualTo(DEFAULT_HUMOR);
         assertThat(testHumorHistory.getDate()).isEqualTo(DEFAULT_DATE);
     }
 
@@ -308,7 +299,7 @@ class HumorHistoryResourceIT {
         HumorHistory partialUpdatedHumorHistory = new HumorHistory();
         partialUpdatedHumorHistory.setId(humorHistory.getId());
 
-        partialUpdatedHumorHistory.humor(UPDATED_HUMOR).date(UPDATED_DATE);
+        partialUpdatedHumorHistory.date(UPDATED_DATE);
 
         restHumorHistoryMockMvc
             .perform(
@@ -322,7 +313,6 @@ class HumorHistoryResourceIT {
         List<HumorHistory> humorHistoryList = humorHistoryRepository.findAll();
         assertThat(humorHistoryList).hasSize(databaseSizeBeforeUpdate);
         HumorHistory testHumorHistory = humorHistoryList.get(humorHistoryList.size() - 1);
-        assertThat(testHumorHistory.getHumor()).isEqualTo(UPDATED_HUMOR);
         assertThat(testHumorHistory.getDate()).isEqualTo(UPDATED_DATE);
     }
 

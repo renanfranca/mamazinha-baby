@@ -3,24 +3,31 @@
   "fields": [
     {
       "fieldName": "name",
-      "fieldType": "String"
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
     },
     {
       "fieldName": "picture",
       "fieldType": "byte[]",
-      "fieldTypeBlobContent": "any"
+      "fieldTypeBlobContent": "image"
     },
     {
       "fieldName": "birthday",
-      "fieldType": "ZonedDateTime"
+      "fieldType": "ZonedDateTime",
+      "fieldValidateRules": ["required"]
     },
     {
       "fieldName": "sign",
       "fieldType": "String"
     },
     {
+      "fieldName": "main",
+      "fieldType": "Boolean"
+    },
+    {
       "fieldName": "userId",
-      "fieldType": "String"
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
     }
   ],
   "relationships": [],
@@ -32,9 +39,9 @@
   "fluentMethods": true,
   "readOnly": false,
   "embedded": false,
-  "applications": ["gateway", "babyprofile"],
-  "microserviceName": "babyprofile",
-  "clientRootFolder": "babyprofile",
+  "applications": ["gateway", "baby"],
+  "microserviceName": "baby",
+  "clientRootFolder": "baby",
   "databaseType": "sql",
-  "changelogDate": "20210911143451"
+  "changelogDate": "20210911191007"
 }

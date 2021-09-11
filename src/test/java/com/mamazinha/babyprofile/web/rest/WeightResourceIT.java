@@ -1,5 +1,6 @@
 package com.mamazinha.babyprofile.web.rest;
 
+import static com.mamazinha.babyprofile.web.rest.TestUtil.sameInstant;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -10,8 +11,10 @@ import com.mamazinha.babyprofile.domain.Weight;
 import com.mamazinha.babyprofile.repository.WeightRepository;
 import com.mamazinha.babyprofile.service.dto.WeightDTO;
 import com.mamazinha.babyprofile.service.mapper.WeightMapper;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,14 +36,11 @@ import org.springframework.transaction.annotation.Transactional;
 @WithMockUser
 class WeightResourceIT {
 
-    private static final Float DEFAULT_VALUE = 1F;
-    private static final Float UPDATED_VALUE = 2F;
+    private static final Double DEFAULT_VALUE = 1D;
+    private static final Double UPDATED_VALUE = 2D;
 
-    private static final LocalDate DEFAULT_DATE = LocalDate.ofEpochDay(0L);
-    private static final LocalDate UPDATED_DATE = LocalDate.now(ZoneId.systemDefault());
-
-    private static final Float DEFAULT_IDEAL_WIGHT = 1F;
-    private static final Float UPDATED_IDEAL_WIGHT = 2F;
+    private static final ZonedDateTime DEFAULT_DATE = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
+    private static final ZonedDateTime UPDATED_DATE = ZonedDateTime.now(ZoneId.systemDefault()).withNano(0);
 
     private static final String ENTITY_API_URL = "/api/weights";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
@@ -69,7 +69,7 @@ class WeightResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static Weight createEntity(EntityManager em) {
-        Weight weight = new Weight().value(DEFAULT_VALUE).date(DEFAULT_DATE).idealWight(DEFAULT_IDEAL_WIGHT);
+        Weight weight = new Weight().value(DEFAULT_VALUE).date(DEFAULT_DATE);
         return weight;
     }
 
@@ -80,7 +80,7 @@ class WeightResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static Weight createUpdatedEntity(EntityManager em) {
-        Weight weight = new Weight().value(UPDATED_VALUE).date(UPDATED_DATE).idealWight(UPDATED_IDEAL_WIGHT);
+        Weight weight = new Weight().value(UPDATED_VALUE).date(UPDATED_DATE);
         return weight;
     }
 
@@ -105,7 +105,6 @@ class WeightResourceIT {
         Weight testWeight = weightList.get(weightList.size() - 1);
         assertThat(testWeight.getValue()).isEqualTo(DEFAULT_VALUE);
         assertThat(testWeight.getDate()).isEqualTo(DEFAULT_DATE);
-        assertThat(testWeight.getIdealWight()).isEqualTo(DEFAULT_IDEAL_WIGHT);
     }
 
     @Test
@@ -129,6 +128,42 @@ class WeightResourceIT {
 
     @Test
     @Transactional
+    void checkValueIsRequired() throws Exception {
+        int databaseSizeBeforeTest = weightRepository.findAll().size();
+        // set the field null
+        weight.setValue(null);
+
+        // Create the Weight, which fails.
+        WeightDTO weightDTO = weightMapper.toDto(weight);
+
+        restWeightMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(weightDTO)))
+            .andExpect(status().isBadRequest());
+
+        List<Weight> weightList = weightRepository.findAll();
+        assertThat(weightList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
+    void checkDateIsRequired() throws Exception {
+        int databaseSizeBeforeTest = weightRepository.findAll().size();
+        // set the field null
+        weight.setDate(null);
+
+        // Create the Weight, which fails.
+        WeightDTO weightDTO = weightMapper.toDto(weight);
+
+        restWeightMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(weightDTO)))
+            .andExpect(status().isBadRequest());
+
+        List<Weight> weightList = weightRepository.findAll();
+        assertThat(weightList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
     void getAllWeights() throws Exception {
         // Initialize the database
         weightRepository.saveAndFlush(weight);
@@ -140,8 +175,7 @@ class WeightResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(weight.getId().intValue())))
             .andExpect(jsonPath("$.[*].value").value(hasItem(DEFAULT_VALUE.doubleValue())))
-            .andExpect(jsonPath("$.[*].date").value(hasItem(DEFAULT_DATE.toString())))
-            .andExpect(jsonPath("$.[*].idealWight").value(hasItem(DEFAULT_IDEAL_WIGHT.doubleValue())));
+            .andExpect(jsonPath("$.[*].date").value(hasItem(sameInstant(DEFAULT_DATE))));
     }
 
     @Test
@@ -157,8 +191,7 @@ class WeightResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(weight.getId().intValue()))
             .andExpect(jsonPath("$.value").value(DEFAULT_VALUE.doubleValue()))
-            .andExpect(jsonPath("$.date").value(DEFAULT_DATE.toString()))
-            .andExpect(jsonPath("$.idealWight").value(DEFAULT_IDEAL_WIGHT.doubleValue()));
+            .andExpect(jsonPath("$.date").value(sameInstant(DEFAULT_DATE)));
     }
 
     @Test
@@ -180,7 +213,7 @@ class WeightResourceIT {
         Weight updatedWeight = weightRepository.findById(weight.getId()).get();
         // Disconnect from session so that the updates on updatedWeight are not directly saved in db
         em.detach(updatedWeight);
-        updatedWeight.value(UPDATED_VALUE).date(UPDATED_DATE).idealWight(UPDATED_IDEAL_WIGHT);
+        updatedWeight.value(UPDATED_VALUE).date(UPDATED_DATE);
         WeightDTO weightDTO = weightMapper.toDto(updatedWeight);
 
         restWeightMockMvc
@@ -197,7 +230,6 @@ class WeightResourceIT {
         Weight testWeight = weightList.get(weightList.size() - 1);
         assertThat(testWeight.getValue()).isEqualTo(UPDATED_VALUE);
         assertThat(testWeight.getDate()).isEqualTo(UPDATED_DATE);
-        assertThat(testWeight.getIdealWight()).isEqualTo(UPDATED_IDEAL_WIGHT);
     }
 
     @Test
@@ -293,7 +325,6 @@ class WeightResourceIT {
         Weight testWeight = weightList.get(weightList.size() - 1);
         assertThat(testWeight.getValue()).isEqualTo(DEFAULT_VALUE);
         assertThat(testWeight.getDate()).isEqualTo(UPDATED_DATE);
-        assertThat(testWeight.getIdealWight()).isEqualTo(DEFAULT_IDEAL_WIGHT);
     }
 
     @Test
@@ -308,7 +339,7 @@ class WeightResourceIT {
         Weight partialUpdatedWeight = new Weight();
         partialUpdatedWeight.setId(weight.getId());
 
-        partialUpdatedWeight.value(UPDATED_VALUE).date(UPDATED_DATE).idealWight(UPDATED_IDEAL_WIGHT);
+        partialUpdatedWeight.value(UPDATED_VALUE).date(UPDATED_DATE);
 
         restWeightMockMvc
             .perform(
@@ -324,7 +355,6 @@ class WeightResourceIT {
         Weight testWeight = weightList.get(weightList.size() - 1);
         assertThat(testWeight.getValue()).isEqualTo(UPDATED_VALUE);
         assertThat(testWeight.getDate()).isEqualTo(UPDATED_DATE);
-        assertThat(testWeight.getIdealWight()).isEqualTo(UPDATED_IDEAL_WIGHT);
     }
 
     @Test
