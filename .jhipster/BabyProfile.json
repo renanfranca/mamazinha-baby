@@ -1,0 +1,40 @@
+{
+  "name": "BabyProfile",
+  "fields": [
+    {
+      "fieldName": "name",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "picture",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "any"
+    },
+    {
+      "fieldName": "birthday",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "sign",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "userId",
+      "fieldType": "String"
+    }
+  ],
+  "relationships": [],
+  "entityTableName": "baby_profile",
+  "dto": "mapstruct",
+  "pagination": "pagination",
+  "service": "serviceClass",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": ["gateway", "babyprofile"],
+  "microserviceName": "babyprofile",
+  "clientRootFolder": "babyprofile",
+  "databaseType": "sql",
+  "changelogDate": "20210911135823"
+}

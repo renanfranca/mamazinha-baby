@@ -1,0 +1,39 @@
+{
+  "name": "Height",
+  "fields": [
+    {
+      "fieldName": "value",
+      "fieldType": "Float"
+    },
+    {
+      "fieldName": "date",
+      "fieldType": "LocalDate"
+    },
+    {
+      "fieldName": "idealWight",
+      "fieldType": "Float"
+    }
+  ],
+  "relationships": [
+    {
+      "relationshipType": "many-to-one",
+      "otherEntityName": "babyProfile",
+      "otherEntityRelationshipName": "height",
+      "relationshipName": "babyProfile",
+      "otherEntityField": "name"
+    }
+  ],
+  "entityTableName": "height",
+  "dto": "mapstruct",
+  "pagination": "infinite-scroll",
+  "service": "serviceClass",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": ["gateway", "babyprofile"],
+  "microserviceName": "babyprofile",
+  "clientRootFolder": "babyprofile",
+  "databaseType": "sql",
+  "changelogDate": "20210911140023"
+}
