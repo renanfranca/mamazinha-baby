@@ -4,13 +4,13 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
     <!--
-        Added the constraints for entity HumorHistory.
+        Added the constraints for entity Nap.
     -->
-    <changeSet id="20210911140123-2" author="jhipster">
+    <changeSet id="20210911143851-2" author="jhipster">
 
         <addForeignKeyConstraint baseColumnNames="baby_profile_id"
-                                 baseTableName="humor_history"
-                                 constraintName="fk_humor_history__baby_profile_id"
+                                 baseTableName="nap"
+                                 constraintName="fk_nap__baby_profile_id"
                                  referencedColumnNames="id"
                                  referencedTableName="baby_profile"/>
     </changeSet>

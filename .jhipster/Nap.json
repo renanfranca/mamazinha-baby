@@ -41,5 +41,5 @@
   "microserviceName": "babyprofile",
   "clientRootFolder": "babyprofile",
   "databaseType": "sql",
-  "changelogDate": "20210911140223"
+  "changelogDate": "20210911143851"
 }

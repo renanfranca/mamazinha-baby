@@ -4,13 +4,13 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
     <!--
-        Added the constraints for entity BreastFeed.
+        Added the constraints for entity Weight.
     -->
-    <changeSet id="20210911135923-2" author="jhipster">
+    <changeSet id="20210911143951-2" author="jhipster">
 
         <addForeignKeyConstraint baseColumnNames="baby_profile_id"
-                                 baseTableName="breast_feed"
-                                 constraintName="fk_breast_feed__baby_profile_id"
+                                 baseTableName="weight"
+                                 constraintName="fk_weight__baby_profile_id"
                                  referencedColumnNames="id"
                                  referencedTableName="baby_profile"/>
     </changeSet>
