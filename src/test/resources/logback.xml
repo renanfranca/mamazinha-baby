@@ -4,7 +4,7 @@
 <configuration scan="true">
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
 
-    <logger name="com.mamazinha.babyprofile" level="INFO"/>
+    <logger name="com.mamazinha.baby" level="INFO"/>
 
     <logger name="tech.jhipster" level="WARN"/>
 
