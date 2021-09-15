@@ -2,6 +2,8 @@ package com.mamazinha.baby.service;
 
 import com.mamazinha.baby.domain.BabyProfile;
 import com.mamazinha.baby.repository.BabyProfileRepository;
+import com.mamazinha.baby.security.AuthoritiesConstants;
+import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.BabyProfileDTO;
 import com.mamazinha.baby.service.mapper.BabyProfileMapper;
 import java.util.Optional;
@@ -39,6 +41,12 @@ public class BabyProfileService {
     public BabyProfileDTO save(BabyProfileDTO babyProfileDTO) {
         log.debug("Request to save BabyProfile : {}", babyProfileDTO);
         BabyProfile babyProfile = babyProfileMapper.toEntity(babyProfileDTO);
+        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            Optional<String> userId = SecurityUtils.getCurrentUserId();
+            if (userId.isPresent()) {
+                babyProfile.userId(userId.get());
+            }
+        }
         babyProfile = babyProfileRepository.save(babyProfile);
         return babyProfileMapper.toDto(babyProfile);
     }
@@ -74,7 +82,14 @@ public class BabyProfileService {
     @Transactional(readOnly = true)
     public Page<BabyProfileDTO> findAll(Pageable pageable) {
         log.debug("Request to get all BabyProfiles");
-        return babyProfileRepository.findAll(pageable).map(babyProfileMapper::toDto);
+        if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            return babyProfileRepository.findAll(pageable).map(babyProfileMapper::toDto);
+        }
+        Optional<String> userId = SecurityUtils.getCurrentUserId();
+        if (userId.isPresent()) {
+            return babyProfileRepository.findByUserId(pageable, userId.get()).map(babyProfileMapper::toDto);
+        }
+        return Page.empty();
     }
 
     /**

@@ -25,6 +25,21 @@ public final class SecurityUtils {
         return Optional.ofNullable(extractPrincipal(securityContext.getAuthentication()));
     }
 
+    public static Optional<String> getCurrentUserId() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        return Optional
+            .ofNullable(securityContext.getAuthentication())
+            .map(
+                authentication -> {
+                    if (authentication instanceof CustomAuthenticationToken) {
+                        CustomAuthenticationToken customAuthenticationToken = (CustomAuthenticationToken) authentication;
+                        return customAuthenticationToken.getUserId();
+                    }
+                    return null;
+                }
+            );
+    }
+
     private static String extractPrincipal(Authentication authentication) {
         if (authentication == null) {
             return null;
