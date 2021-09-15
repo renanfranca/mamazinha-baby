@@ -25,11 +25,13 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -197,26 +199,6 @@ class BabyProfileResourceIT {
         int databaseSizeBeforeTest = babyProfileRepository.findAll().size();
         // set the field null
         babyProfile.setBirthday(null);
-
-        // Create the BabyProfile, which fails.
-        BabyProfileDTO babyProfileDTO = babyProfileMapper.toDto(babyProfile);
-
-        restBabyProfileMockMvc
-            .perform(
-                post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(babyProfileDTO))
-            )
-            .andExpect(status().isBadRequest());
-
-        List<BabyProfile> babyProfileList = babyProfileRepository.findAll();
-        assertThat(babyProfileList).hasSize(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
-    void checkUserIdIsRequired() throws Exception {
-        int databaseSizeBeforeTest = babyProfileRepository.findAll().size();
-        // set the field null
-        babyProfile.setUserId(null);
 
         // Create the BabyProfile, which fails.
         BabyProfileDTO babyProfileDTO = babyProfileMapper.toDto(babyProfile);
@@ -548,5 +530,40 @@ class BabyProfileResourceIT {
         // Validate the database contains one less item
         List<BabyProfile> babyProfileList = babyProfileRepository.findAll();
         assertThat(babyProfileList).hasSize(databaseSizeBeforeDelete - 1);
+    }
+
+    @Test
+    @Transactional
+    void shouldRemainOnlyOneBabyProfileForSameUserAsMain() throws Exception {
+        // given
+        babyProfileRepository.saveAndFlush(createEntity(em).main(true));
+        babyProfileRepository.saveAndFlush(createEntity(em).main(true));
+        babyProfileRepository.saveAndFlush(createEntity(em).main(true));
+
+        // when
+        // Create the BabyProfile
+        BabyProfileDTO babyProfileDTO = babyProfileMapper.toDto(createEntity(em).main(true));
+        restBabyProfileMockMvc
+            .perform(
+                post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(babyProfileDTO))
+            )
+            .andExpect(status().isCreated());
+        // then
+        List<BabyProfile> babyProfileList = babyProfileRepository.findAll();
+        BabyProfile testBabyProfile = babyProfileList.get(babyProfileList.size() - 1);
+        assertThat(babyProfileRepository.findByUserId(Pageable.unpaged(), DEFAULT_USER_ID))
+            .isNotEmpty()
+            .allSatisfy(
+                new Consumer<BabyProfile>() {
+                    @Override
+                    public void accept(BabyProfile babyProfile) {
+                        if (testBabyProfile.getId() == babyProfile.getId()) {
+                            assertThat(babyProfile.getMain()).isTrue();
+                        } else {
+                            assertThat(babyProfile.getMain()).isFalse();
+                        }
+                    }
+                }
+            );
     }
 }

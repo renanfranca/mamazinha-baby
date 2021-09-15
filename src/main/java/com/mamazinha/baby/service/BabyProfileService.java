@@ -6,7 +6,9 @@ import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.BabyProfileDTO;
 import com.mamazinha.baby.service.mapper.BabyProfileMapper;
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -48,6 +50,9 @@ public class BabyProfileService {
             }
         }
         babyProfile = babyProfileRepository.save(babyProfile);
+        if (Boolean.TRUE.equals(babyProfile.getMain())) {
+            updateOthersBabyProfileFromSameUserToMainFalse(babyProfile.getUserId(), babyProfile.getId());
+        }
         return babyProfileMapper.toDto(babyProfile);
     }
 
@@ -112,5 +117,20 @@ public class BabyProfileService {
     public void delete(Long id) {
         log.debug("Request to delete BabyProfile : {}", id);
         babyProfileRepository.deleteById(id);
+    }
+
+    private void updateOthersBabyProfileFromSameUserToMainFalse(String userId, Long id) {
+        babyProfileRepository.saveAll(
+            babyProfileRepository
+                .findByUserIdAndIdNotIn(userId, Arrays.asList(id))
+                .stream()
+                .map(
+                    babyProfile -> {
+                        babyProfile.main(false);
+                        return babyProfile;
+                    }
+                )
+                .collect(Collectors.toList())
+        );
     }
 }
