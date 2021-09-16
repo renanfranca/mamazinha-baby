@@ -2,6 +2,8 @@ package com.mamazinha.baby.service;
 
 import com.mamazinha.baby.domain.Nap;
 import com.mamazinha.baby.repository.NapRepository;
+import com.mamazinha.baby.security.AuthoritiesConstants;
+import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.NapDTO;
 import com.mamazinha.baby.service.mapper.NapMapper;
 import java.util.Optional;
@@ -74,7 +76,14 @@ public class NapService {
     @Transactional(readOnly = true)
     public Page<NapDTO> findAll(Pageable pageable) {
         log.debug("Request to get all Naps");
-        return napRepository.findAll(pageable).map(napMapper::toDto);
+        if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            return napRepository.findAll(pageable).map(napMapper::toDto);
+        }
+        Optional<String> userId = SecurityUtils.getCurrentUserId();
+        if (userId.isPresent()) {
+            return napRepository.findByBabyProfileUserId(pageable, userId.get()).map(napMapper::toDto);
+        }
+        return Page.empty();
     }
 
     /**
