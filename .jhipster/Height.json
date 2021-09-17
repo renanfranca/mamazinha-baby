@@ -1,0 +1,37 @@
+{
+  "name": "Height",
+  "fields": [
+    {
+      "fieldName": "value",
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "date",
+      "fieldType": "ZonedDateTime",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "relationships": [
+    {
+      "relationshipType": "many-to-one",
+      "otherEntityName": "babyProfile",
+      "otherEntityRelationshipName": "height",
+      "relationshipName": "babyProfile",
+      "otherEntityField": "name"
+    }
+  ],
+  "entityTableName": "height",
+  "dto": "mapstruct",
+  "pagination": "infinite-scroll",
+  "service": "serviceClass",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": ["gateway", "baby"],
+  "microserviceName": "baby",
+  "clientRootFolder": "baby",
+  "databaseType": "sql",
+  "changelogDate": "20210913140049"
+}

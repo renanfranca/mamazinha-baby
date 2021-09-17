@@ -1,0 +1,38 @@
+{
+  "name": "HumorHistory",
+  "fields": [
+    {
+      "fieldName": "date",
+      "fieldType": "ZonedDateTime"
+    }
+  ],
+  "relationships": [
+    {
+      "relationshipType": "many-to-one",
+      "otherEntityName": "babyProfile",
+      "otherEntityRelationshipName": "humorHistory",
+      "relationshipName": "babyProfile",
+      "otherEntityField": "name"
+    },
+    {
+      "relationshipType": "many-to-one",
+      "otherEntityName": "humor",
+      "otherEntityRelationshipName": "humorHistory",
+      "relationshipName": "humor",
+      "otherEntityField": "description"
+    }
+  ],
+  "entityTableName": "humor_history",
+  "dto": "mapstruct",
+  "pagination": "infinite-scroll",
+  "service": "serviceClass",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": ["gateway", "baby"],
+  "microserviceName": "baby",
+  "clientRootFolder": "baby",
+  "databaseType": "sql",
+  "changelogDate": "20210913140050"
+}
