@@ -54,13 +54,11 @@ public class BabyProfileService {
 
         return babyProfileRepository
             .findById(babyProfileDTO.getId())
-            .map(
-                existingBabyProfile -> {
-                    babyProfileMapper.partialUpdate(existingBabyProfile, babyProfileDTO);
+            .map(existingBabyProfile -> {
+                babyProfileMapper.partialUpdate(existingBabyProfile, babyProfileDTO);
 
-                    return existingBabyProfile;
-                }
-            )
+                return existingBabyProfile;
+            })
             .map(babyProfileRepository::save)
             .map(babyProfileMapper::toDto);
     }

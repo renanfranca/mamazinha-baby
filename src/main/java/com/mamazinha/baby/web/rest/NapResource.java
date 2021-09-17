@@ -109,7 +109,7 @@ public class NapResource {
      * or with status {@code 500 (Internal Server Error)} if the napDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PatchMapping(value = "/naps/{id}", consumes = "application/merge-patch+json")
+    @PatchMapping(value = "/naps/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<NapDTO> partialUpdateNap(@PathVariable(value = "id", required = false) final Long id, @RequestBody NapDTO napDTO)
         throws URISyntaxException {
         log.debug("REST request to partial update Nap partially : {}, {}", id, napDTO);

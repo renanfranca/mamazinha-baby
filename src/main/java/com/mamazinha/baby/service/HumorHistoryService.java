@@ -54,13 +54,11 @@ public class HumorHistoryService {
 
         return humorHistoryRepository
             .findById(humorHistoryDTO.getId())
-            .map(
-                existingHumorHistory -> {
-                    humorHistoryMapper.partialUpdate(existingHumorHistory, humorHistoryDTO);
+            .map(existingHumorHistory -> {
+                humorHistoryMapper.partialUpdate(existingHumorHistory, humorHistoryDTO);
 
-                    return existingHumorHistory;
-                }
-            )
+                return existingHumorHistory;
+            })
             .map(humorHistoryRepository::save)
             .map(humorHistoryMapper::toDto);
     }

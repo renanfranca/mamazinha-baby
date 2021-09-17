@@ -54,13 +54,11 @@ public class NapService {
 
         return napRepository
             .findById(napDTO.getId())
-            .map(
-                existingNap -> {
-                    napMapper.partialUpdate(existingNap, napDTO);
+            .map(existingNap -> {
+                napMapper.partialUpdate(existingNap, napDTO);
 
-                    return existingNap;
-                }
-            )
+                return existingNap;
+            })
             .map(napRepository::save)
             .map(napMapper::toDto);
     }

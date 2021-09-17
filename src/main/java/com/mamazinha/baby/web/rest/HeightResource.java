@@ -113,7 +113,7 @@ public class HeightResource {
      * or with status {@code 500 (Internal Server Error)} if the heightDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PatchMapping(value = "/heights/{id}", consumes = "application/merge-patch+json")
+    @PatchMapping(value = "/heights/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<HeightDTO> partialUpdateHeight(
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody HeightDTO heightDTO

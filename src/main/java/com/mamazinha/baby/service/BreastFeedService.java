@@ -54,13 +54,11 @@ public class BreastFeedService {
 
         return breastFeedRepository
             .findById(breastFeedDTO.getId())
-            .map(
-                existingBreastFeed -> {
-                    breastFeedMapper.partialUpdate(existingBreastFeed, breastFeedDTO);
+            .map(existingBreastFeed -> {
+                breastFeedMapper.partialUpdate(existingBreastFeed, breastFeedDTO);
 
-                    return existingBreastFeed;
-                }
-            )
+                return existingBreastFeed;
+            })
             .map(breastFeedRepository::save)
             .map(breastFeedMapper::toDto);
     }
