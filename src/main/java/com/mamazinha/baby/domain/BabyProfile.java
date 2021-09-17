@@ -20,6 +20,7 @@ public class BabyProfile implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
+    @Column(name = "id")
     private Long id;
 
     @NotNull
@@ -48,17 +49,18 @@ public class BabyProfile implements Serializable {
     private String userId;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
+
     public Long getId() {
-        return id;
+        return this.id;
+    }
+
+    public BabyProfile id(Long id) {
+        this.setId(id);
+        return this;
     }
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public BabyProfile id(Long id) {
-        this.id = id;
-        return this;
     }
 
     public String getName() {
@@ -66,7 +68,7 @@ public class BabyProfile implements Serializable {
     }
 
     public BabyProfile name(String name) {
-        this.name = name;
+        this.setName(name);
         return this;
     }
 
@@ -79,7 +81,7 @@ public class BabyProfile implements Serializable {
     }
 
     public BabyProfile picture(byte[] picture) {
-        this.picture = picture;
+        this.setPicture(picture);
         return this;
     }
 
@@ -105,7 +107,7 @@ public class BabyProfile implements Serializable {
     }
 
     public BabyProfile birthday(ZonedDateTime birthday) {
-        this.birthday = birthday;
+        this.setBirthday(birthday);
         return this;
     }
 
@@ -118,7 +120,7 @@ public class BabyProfile implements Serializable {
     }
 
     public BabyProfile sign(String sign) {
-        this.sign = sign;
+        this.setSign(sign);
         return this;
     }
 
@@ -131,7 +133,7 @@ public class BabyProfile implements Serializable {
     }
 
     public BabyProfile main(Boolean main) {
-        this.main = main;
+        this.setMain(main);
         return this;
     }
 
@@ -144,7 +146,7 @@ public class BabyProfile implements Serializable {
     }
 
     public BabyProfile userId(String userId) {
-        this.userId = userId;
+        this.setUserId(userId);
         return this;
     }
 

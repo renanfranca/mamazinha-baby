@@ -54,13 +54,11 @@ public class HeightService {
 
         return heightRepository
             .findById(heightDTO.getId())
-            .map(
-                existingHeight -> {
-                    heightMapper.partialUpdate(existingHeight, heightDTO);
+            .map(existingHeight -> {
+                heightMapper.partialUpdate(existingHeight, heightDTO);
 
-                    return existingHeight;
-                }
-            )
+                return existingHeight;
+            })
             .map(heightRepository::save)
             .map(heightMapper::toDto);
     }

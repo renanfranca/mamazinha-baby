@@ -24,7 +24,7 @@
     "packageName": "com.mamazinha.baby",
     "packageFolder": "com/mamazinha/baby",
     "nativeLanguage": "pt-br",
-    "jhipsterVersion": "7.1.0",
+    "jhipsterVersion": "7.2.0",
     "clientPackageManager": "npm",
     "dtoSuffix": "DTO",
     "entitySuffix": "",
@@ -44,6 +44,7 @@
     "clientFramework": "angularX",
     "clientTheme": "none",
     "clientThemeVariant": "",
-    "lastLiquibaseTimestamp": 1631541652000
+    "lastLiquibaseTimestamp": 1631541652000,
+    "enableGradleEnterprise": false
   }
 }

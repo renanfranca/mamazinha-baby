@@ -19,6 +19,7 @@ public class HumorHistory implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "date")
@@ -31,17 +32,18 @@ public class HumorHistory implements Serializable {
     private Humor humor;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
+
     public Long getId() {
-        return id;
+        return this.id;
+    }
+
+    public HumorHistory id(Long id) {
+        this.setId(id);
+        return this;
     }
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public HumorHistory id(Long id) {
-        this.id = id;
-        return this;
     }
 
     public ZonedDateTime getDate() {
@@ -49,7 +51,7 @@ public class HumorHistory implements Serializable {
     }
 
     public HumorHistory date(ZonedDateTime date) {
-        this.date = date;
+        this.setDate(date);
         return this;
     }
 
@@ -61,26 +63,26 @@ public class HumorHistory implements Serializable {
         return this.babyProfile;
     }
 
+    public void setBabyProfile(BabyProfile babyProfile) {
+        this.babyProfile = babyProfile;
+    }
+
     public HumorHistory babyProfile(BabyProfile babyProfile) {
         this.setBabyProfile(babyProfile);
         return this;
-    }
-
-    public void setBabyProfile(BabyProfile babyProfile) {
-        this.babyProfile = babyProfile;
     }
 
     public Humor getHumor() {
         return this.humor;
     }
 
+    public void setHumor(Humor humor) {
+        this.humor = humor;
+    }
+
     public HumorHistory humor(Humor humor) {
         this.setHumor(humor);
         return this;
-    }
-
-    public void setHumor(Humor humor) {
-        this.humor = humor;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

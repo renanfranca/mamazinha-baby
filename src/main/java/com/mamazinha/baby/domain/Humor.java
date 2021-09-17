@@ -19,6 +19,7 @@ public class Humor implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
+    @Column(name = "id")
     private Long id;
 
     /**
@@ -40,17 +41,18 @@ public class Humor implements Serializable {
     private String emoticoContentType;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
+
     public Long getId() {
-        return id;
+        return this.id;
+    }
+
+    public Humor id(Long id) {
+        this.setId(id);
+        return this;
     }
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Humor id(Long id) {
-        this.id = id;
-        return this;
     }
 
     public Integer getValue() {
@@ -58,7 +60,7 @@ public class Humor implements Serializable {
     }
 
     public Humor value(Integer value) {
-        this.value = value;
+        this.setValue(value);
         return this;
     }
 
@@ -71,7 +73,7 @@ public class Humor implements Serializable {
     }
 
     public Humor description(String description) {
-        this.description = description;
+        this.setDescription(description);
         return this;
     }
 
@@ -84,7 +86,7 @@ public class Humor implements Serializable {
     }
 
     public Humor emotico(byte[] emotico) {
-        this.emotico = emotico;
+        this.setEmotico(emotico);
         return this;
     }
 

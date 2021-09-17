@@ -20,6 +20,7 @@ public class BreastFeed implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "start")
@@ -36,17 +37,18 @@ public class BreastFeed implements Serializable {
     private BabyProfile babyProfile;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
+
     public Long getId() {
-        return id;
+        return this.id;
+    }
+
+    public BreastFeed id(Long id) {
+        this.setId(id);
+        return this;
     }
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public BreastFeed id(Long id) {
-        this.id = id;
-        return this;
     }
 
     public ZonedDateTime getStart() {
@@ -54,7 +56,7 @@ public class BreastFeed implements Serializable {
     }
 
     public BreastFeed start(ZonedDateTime start) {
-        this.start = start;
+        this.setStart(start);
         return this;
     }
 
@@ -67,7 +69,7 @@ public class BreastFeed implements Serializable {
     }
 
     public BreastFeed end(ZonedDateTime end) {
-        this.end = end;
+        this.setEnd(end);
         return this;
     }
 
@@ -80,7 +82,7 @@ public class BreastFeed implements Serializable {
     }
 
     public BreastFeed pain(Pain pain) {
-        this.pain = pain;
+        this.setPain(pain);
         return this;
     }
 
@@ -92,13 +94,13 @@ public class BreastFeed implements Serializable {
         return this.babyProfile;
     }
 
+    public void setBabyProfile(BabyProfile babyProfile) {
+        this.babyProfile = babyProfile;
+    }
+
     public BreastFeed babyProfile(BabyProfile babyProfile) {
         this.setBabyProfile(babyProfile);
         return this;
-    }
-
-    public void setBabyProfile(BabyProfile babyProfile) {
-        this.babyProfile = babyProfile;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

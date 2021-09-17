@@ -3,7 +3,7 @@
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
     xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
     <!--
@@ -54,12 +54,13 @@
         <loadData
                   file="config/liquibase/fake-data/baby_profile.csv"
                   separator=";"
-                  tableName="baby_profile">
+                  tableName="baby_profile"
+                  usePreparedStatements="true">
             <column name="id" type="numeric"/>
             <column name="name" type="string"/>
             <column name="picture" type="blob"/>
             <column name="picture_content_type" type="string"/>
-            <column name="birthday" type="${datetimeType}"/>
+            <column name="birthday" type="date"/>
             <column name="sign" type="string"/>
             <column name="main" type="boolean"/>
             <column name="user_id" type="string"/>

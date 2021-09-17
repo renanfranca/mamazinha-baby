@@ -113,7 +113,7 @@ public class WeightResource {
      * or with status {@code 500 (Internal Server Error)} if the weightDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PatchMapping(value = "/weights/{id}", consumes = "application/merge-patch+json")
+    @PatchMapping(value = "/weights/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<WeightDTO> partialUpdateWeight(
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody WeightDTO weightDTO

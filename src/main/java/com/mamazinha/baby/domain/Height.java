@@ -20,6 +20,7 @@ public class Height implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
+    @Column(name = "id")
     private Long id;
 
     @NotNull
@@ -34,17 +35,18 @@ public class Height implements Serializable {
     private BabyProfile babyProfile;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
+
     public Long getId() {
-        return id;
+        return this.id;
+    }
+
+    public Height id(Long id) {
+        this.setId(id);
+        return this;
     }
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Height id(Long id) {
-        this.id = id;
-        return this;
     }
 
     public Double getValue() {
@@ -52,7 +54,7 @@ public class Height implements Serializable {
     }
 
     public Height value(Double value) {
-        this.value = value;
+        this.setValue(value);
         return this;
     }
 
@@ -65,7 +67,7 @@ public class Height implements Serializable {
     }
 
     public Height date(ZonedDateTime date) {
-        this.date = date;
+        this.setDate(date);
         return this;
     }
 
@@ -77,13 +79,13 @@ public class Height implements Serializable {
         return this.babyProfile;
     }
 
+    public void setBabyProfile(BabyProfile babyProfile) {
+        this.babyProfile = babyProfile;
+    }
+
     public Height babyProfile(BabyProfile babyProfile) {
         this.setBabyProfile(babyProfile);
         return this;
-    }
-
-    public void setBabyProfile(BabyProfile babyProfile) {
-        this.babyProfile = babyProfile;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

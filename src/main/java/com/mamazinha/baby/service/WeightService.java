@@ -54,13 +54,11 @@ public class WeightService {
 
         return weightRepository
             .findById(weightDTO.getId())
-            .map(
-                existingWeight -> {
-                    weightMapper.partialUpdate(existingWeight, weightDTO);
+            .map(existingWeight -> {
+                weightMapper.partialUpdate(existingWeight, weightDTO);
 
-                    return existingWeight;
-                }
-            )
+                return existingWeight;
+            })
             .map(weightRepository::save)
             .map(weightMapper::toDto);
     }
