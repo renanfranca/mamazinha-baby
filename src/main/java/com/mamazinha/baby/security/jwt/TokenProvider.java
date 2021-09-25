@@ -1,6 +1,6 @@
 package com.mamazinha.baby.security.jwt;
 
-import com.mamazinha.baby.security.CustomAuthenticationToken;
+import com.mamazinha.baby.security.CustomUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
@@ -16,10 +16,10 @@ import java.util.Date;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import tech.jhipster.config.JHipsterProperties;
@@ -100,9 +100,9 @@ public class TokenProvider {
             log.debug("No user id in token");
         }
 
-        User principal = new User(claims.getSubject(), "", authorities);
+        CustomUser principal = new CustomUser(claims.getSubject(), "", authorities, userId);
 
-        return new CustomAuthenticationToken(principal, token, authorities, userId);
+        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
     public boolean validateToken(String authToken) {

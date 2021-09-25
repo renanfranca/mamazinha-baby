@@ -28,17 +28,17 @@ public final class SecurityUtils {
 
     public static Optional<String> getCurrentUserId() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
-        return Optional
-            .ofNullable(securityContext.getAuthentication())
-            .map(
-                authentication -> {
-                    if (authentication instanceof CustomAuthenticationToken) {
-                        CustomAuthenticationToken customAuthenticationToken = (CustomAuthenticationToken) authentication;
-                        return customAuthenticationToken.getUserId();
-                    }
-                    return null;
-                }
-            );
+        return Optional.ofNullable(extractUserId(securityContext.getAuthentication()));
+    }
+
+    private static String extractUserId(Authentication authentication) {
+        if (authentication == null) {
+            return null;
+        } else if (authentication.getPrincipal() instanceof CustomUser) {
+            CustomUser customUser = (CustomUser) authentication.getPrincipal();
+            return customUser.getUserId();
+        }
+        return null;
     }
 
     private static String extractPrincipal(Authentication authentication) {

@@ -14,12 +14,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.mamazinha.baby.IntegrationTest;
+import com.mamazinha.baby.domain.BabyProfile;
 import com.mamazinha.baby.domain.Nap;
 import com.mamazinha.baby.domain.enumeration.Place;
+import com.mamazinha.baby.repository.BabyProfileRepository;
 import com.mamazinha.baby.repository.NapRepository;
+import com.mamazinha.baby.security.CustomUser;
 import com.mamazinha.baby.service.dto.NapDTO;
 import com.mamazinha.baby.service.mapper.NapMapper;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -29,10 +35,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @IntegrationTest
 @AutoConfigureMockMvc
-@WithMockUser
+@WithUserDetails
 class NapResourceIT {
 
     private static final ZonedDateTime DEFAULT_START = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
@@ -73,6 +82,12 @@ class NapResourceIT {
 
     private Nap nap;
 
+    @MockBean
+    private Clock clock;
+
+    @Autowired
+    private BabyProfileRepository babyProfileRepository;
+
     /**
      * Create an entity for this test.
      *
@@ -97,6 +112,8 @@ class NapResourceIT {
 
     @BeforeEach
     public void initTest() {
+        Mockito.when(clock.instant()).thenReturn(Clock.systemDefaultZone().instant());
+        Mockito.when(clock.getZone()).thenReturn(Clock.systemDefaultZone().getZone());
         nap = createEntity(em);
     }
 
@@ -412,10 +429,83 @@ class NapResourceIT {
         int databaseSizeBeforeDelete = napRepository.findAll().size();
 
         // Delete the nap
-        restNapMockMvc.perform(delete(ENTITY_API_URL_ID, nap.getId()).accept(MediaType.APPLICATION_JSON)).andExpect(status().isNoContent());
+        restNapMockMvc.perform(delete(ENTITY_API_URL, nap.getId()).accept(MediaType.APPLICATION_JSON)).andExpect(status().isNoContent());
 
         // Validate the database contains one less item
         List<Nap> napList = napRepository.findAll();
         assertThat(napList).hasSize(databaseSizeBeforeDelete - 1);
+    }
+
+    @Test
+    @Transactional
+    void shouldSumNapsInHoursOfToday() throws Exception {
+        // given
+        mockClockFixed(2021, 9, 20, 16, 30, 00);
+
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        // valid
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 19, 23, 30, 0, 0, ZoneOffset.UTC))
+                .end(ZonedDateTime.of(2021, 9, 20, 0, 30, 0, 0, ZoneOffset.UTC))
+                .babyProfile(babyProfile)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 20, 7, 0, 0, 0, ZoneOffset.UTC))
+                .end(ZonedDateTime.of(2021, 9, 20, 8, 0, 0, 0, ZoneOffset.UTC))
+                .babyProfile(babyProfile)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 20, 10, 0, 0, 0, ZoneOffset.UTC))
+                .end(ZonedDateTime.of(2021, 9, 20, 11, 0, 0, 0, ZoneOffset.UTC))
+                .babyProfile(babyProfile)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 20, 21, 0, 0, 0, ZoneOffset.UTC))
+                .end(ZonedDateTime.of(2021, 9, 21, 0, 30, 0, 0, ZoneOffset.UTC))
+                .babyProfile(babyProfile)
+        );
+
+        // invalid
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 19, 8, 0, 0, 0, ZoneOffset.UTC))
+                .end(ZonedDateTime.of(2021, 9, 19, 9, 0, 0, 0, ZoneOffset.UTC))
+                .babyProfile(babyProfile)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 21, 8, 0, 0, 0, ZoneOffset.UTC))
+                .end(ZonedDateTime.of(2021, 9, 21, 9, 0, 0, 0, ZoneOffset.UTC))
+                .babyProfile(babyProfile)
+        );
+        // when
+        restNapMockMvc
+            .perform(
+                get(ENTITY_API_URL + "/today-sum-naps-in-hours-by-baby-profile/{id}", babyProfile.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.sleepHours").value(5.5))
+            .andExpect(jsonPath("$.sleepHoursGoal").value(16));
+    }
+
+    private void mockClockFixed(Integer year, Integer month, Integer day, Integer hour, Integer minute, Integer second) {
+        LocalDateTime dataTimeFixedAtTest;
+        if (hour != null && minute != null && second != null) {
+            dataTimeFixedAtTest = LocalDateTime.of(year, month, day, hour, minute, second);
+        } else {
+            dataTimeFixedAtTest = LocalDate.of(year, month, day).atStartOfDay();
+        }
+        Clock fixedClock = Clock.fixed(dataTimeFixedAtTest.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+
+        Mockito.when(clock.instant()).thenReturn(fixedClock.instant());
+        Mockito.when(clock.getZone()).thenReturn(fixedClock.getZone());
     }
 }
