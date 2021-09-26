@@ -5,12 +5,20 @@ import com.mamazinha.baby.repository.NapRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.NapDTO;
+import com.mamazinha.baby.service.dto.NapTodayDTO;
 import com.mamazinha.baby.service.mapper.NapMapper;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +35,12 @@ public class NapService {
 
     private final NapMapper napMapper;
 
-    public NapService(NapRepository napRepository, NapMapper napMapper) {
+    private final Clock clock;
+
+    public NapService(NapRepository napRepository, NapMapper napMapper, Clock clock) {
         this.napRepository = napRepository;
         this.napMapper = napMapper;
+        this.clock = clock;
     }
 
     /**
@@ -96,6 +107,33 @@ public class NapService {
         return napRepository.findById(id).map(napMapper::toDto);
     }
 
+    public NapTodayDTO getTodaySumNapsHoursByBabyProfile(Long id) {
+        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            Optional<String> userId = SecurityUtils.getCurrentUserId();
+            if (!userId.isPresent()) {
+                throw new AccessDeniedException("You are not logged in!");
+            }
+            if (!napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId.get())) {
+                throw new AccessDeniedException("That is not your baby profile!");
+            }
+        }
+
+        LocalDate nowLocalDate = LocalDate.now(clock);
+        ZonedDateTime todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneOffset.UTC);
+        ZonedDateTime tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneOffset.UTC);
+
+        List<Nap> napList = napRepository.findByBabyProfileIdAndStartBetweenOrBabyProfileIdAndEndBetween(
+            id,
+            todayMidnight,
+            tomorrowMidnight,
+            id,
+            todayMidnight,
+            tomorrowMidnight
+        );
+
+        return new NapTodayDTO().sleepHours(sumTotalNapsInHours(napList, todayMidnight, tomorrowMidnight)).sleepHoursGoal(16);
+    }
+
     /**
      * Delete the nap by id.
      *
@@ -104,5 +142,40 @@ public class NapService {
     public void delete(Long id) {
         log.debug("Request to delete Nap : {}", id);
         napRepository.deleteById(id);
+    }
+
+    private Double sumTotalNapsInHours(List<Nap> napList, ZonedDateTime todayMidnight, ZonedDateTime tomorrowMidnight) {
+        return (
+            napList
+                .stream()
+                .mapToDouble(nap -> {
+                    if (
+                        nap.getStart().isAfter(todayMidnight) &&
+                        nap.getStart().isBefore(tomorrowMidnight) &&
+                        nap.getEnd().isAfter(todayMidnight) &&
+                        nap.getEnd().isBefore(tomorrowMidnight)
+                    ) {
+                        return ChronoUnit.MINUTES.between(nap.getStart(), nap.getEnd());
+                    }
+                    if (
+                        nap.getStart().isBefore(todayMidnight) &&
+                        nap.getEnd().isAfter(todayMidnight) &&
+                        nap.getEnd().isBefore(tomorrowMidnight)
+                    ) {
+                        return ChronoUnit.MINUTES.between(todayMidnight, nap.getEnd());
+                    }
+                    if (
+                        nap.getStart().isAfter(todayMidnight) &&
+                        nap.getStart().isBefore(tomorrowMidnight) &&
+                        nap.getEnd().isAfter(tomorrowMidnight)
+                    ) {
+                        return ChronoUnit.MINUTES.between(nap.getStart(), tomorrowMidnight);
+                    }
+
+                    return 0;
+                })
+                .sum() /
+            60
+        );
     }
 }
