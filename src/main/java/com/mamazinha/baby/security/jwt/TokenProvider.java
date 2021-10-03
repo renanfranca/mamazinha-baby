@@ -108,11 +108,16 @@ public class TokenProvider {
     public boolean validateToken(String authToken) {
         try {
             jwtParser.parseClaimsJws(authToken);
-            return true;
+            return existsUserId(authToken);
         } catch (JwtException | IllegalArgumentException e) {
             log.info("Invalid JWT token.");
             log.trace("Invalid JWT token trace.", e);
         }
         return false;
+    }
+
+    private boolean existsUserId(String token) {
+        Claims claims = jwtParser.parseClaimsJws(token).getBody();
+        return claims.get(USER_ID_KEY) == null;
     }
 }
