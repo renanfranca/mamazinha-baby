@@ -118,6 +118,6 @@ public class TokenProvider {
 
     private boolean existsUserId(String token) {
         Claims claims = jwtParser.parseClaimsJws(token).getBody();
-        return claims.get(USER_ID_KEY) == null;
+        return claims.get(USER_ID_KEY) != null;
     }
 }
