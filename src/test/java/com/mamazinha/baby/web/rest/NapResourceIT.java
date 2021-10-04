@@ -483,6 +483,9 @@ class NapResourceIT {
                 .end(ZonedDateTime.of(2021, 9, 21, 9, 0, 0, 0, ZoneOffset.UTC))
                 .babyProfile(babyProfile)
         );
+        napRepository.saveAndFlush(
+            createEntity(em).start(ZonedDateTime.of(2021, 9, 20, 8, 0, 0, 0, ZoneOffset.UTC)).end(null).babyProfile(babyProfile)
+        );
         // when
         restNapMockMvc
             .perform(

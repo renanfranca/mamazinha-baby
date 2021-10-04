@@ -146,6 +146,9 @@ public class NapService {
             napList
                 .stream()
                 .mapToDouble(nap -> {
+                    if (nap.getEnd() == null) {
+                        return 0;
+                    }
                     if (
                         nap.getStart().isAfter(todayMidnight) &&
                         nap.getStart().isBefore(tomorrowMidnight) &&
