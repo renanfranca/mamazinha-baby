@@ -27,7 +27,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Random;
@@ -53,10 +52,10 @@ import org.springframework.transaction.annotation.Transactional;
 @WithUserDetails
 class NapResourceIT {
 
-    private static final ZonedDateTime DEFAULT_START = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
+    private static final ZonedDateTime DEFAULT_START = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault());
     private static final ZonedDateTime UPDATED_START = ZonedDateTime.now(ZoneId.systemDefault()).withNano(0);
 
-    private static final ZonedDateTime DEFAULT_END = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
+    private static final ZonedDateTime DEFAULT_END = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault());
     private static final ZonedDateTime UPDATED_END = ZonedDateTime.now(ZoneId.systemDefault()).withNano(0);
 
     private static final Place DEFAULT_PLACE = Place.LAP;
@@ -440,51 +439,63 @@ class NapResourceIT {
     @Transactional
     void shouldSumNapsInHoursOfToday() throws Exception {
         // given
-        mockClockFixed(2021, 9, 20, 16, 30, 00);
+        mockClockFixed(2021, 9, 20, 16, 30, 00, null);
 
         BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
 
         // valid
         napRepository.saveAndFlush(
             createEntity(em)
-                .start(ZonedDateTime.of(2021, 9, 19, 23, 30, 0, 0, ZoneOffset.UTC))
-                .end(ZonedDateTime.of(2021, 9, 20, 0, 30, 0, 0, ZoneOffset.UTC))
+                .start(ZonedDateTime.of(2021, 9, 19, 23, 30, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 20, 0, 30, 0, 0, ZoneId.systemDefault()))
                 .babyProfile(babyProfile)
         );
         napRepository.saveAndFlush(
             createEntity(em)
-                .start(ZonedDateTime.of(2021, 9, 20, 7, 0, 0, 0, ZoneOffset.UTC))
-                .end(ZonedDateTime.of(2021, 9, 20, 8, 0, 0, 0, ZoneOffset.UTC))
+                .start(ZonedDateTime.of(2021, 9, 20, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 20, 1, 0, 0, 0, ZoneId.systemDefault()))
                 .babyProfile(babyProfile)
         );
         napRepository.saveAndFlush(
             createEntity(em)
-                .start(ZonedDateTime.of(2021, 9, 20, 10, 0, 0, 0, ZoneOffset.UTC))
-                .end(ZonedDateTime.of(2021, 9, 20, 11, 0, 0, 0, ZoneOffset.UTC))
+                .start(ZonedDateTime.of(2021, 9, 20, 7, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 20, 8, 0, 0, 0, ZoneId.systemDefault()))
                 .babyProfile(babyProfile)
         );
         napRepository.saveAndFlush(
             createEntity(em)
-                .start(ZonedDateTime.of(2021, 9, 20, 21, 0, 0, 0, ZoneOffset.UTC))
-                .end(ZonedDateTime.of(2021, 9, 21, 0, 30, 0, 0, ZoneOffset.UTC))
+                .start(ZonedDateTime.of(2021, 9, 20, 10, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 20, 11, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 20, 23, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 21, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 20, 21, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 21, 0, 30, 0, 0, ZoneId.systemDefault()))
                 .babyProfile(babyProfile)
         );
 
         // invalid
         napRepository.saveAndFlush(
             createEntity(em)
-                .start(ZonedDateTime.of(2021, 9, 19, 8, 0, 0, 0, ZoneOffset.UTC))
-                .end(ZonedDateTime.of(2021, 9, 19, 9, 0, 0, 0, ZoneOffset.UTC))
+                .start(ZonedDateTime.of(2021, 9, 19, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 19, 9, 0, 0, 0, ZoneId.systemDefault()))
                 .babyProfile(babyProfile)
         );
         napRepository.saveAndFlush(
             createEntity(em)
-                .start(ZonedDateTime.of(2021, 9, 21, 8, 0, 0, 0, ZoneOffset.UTC))
-                .end(ZonedDateTime.of(2021, 9, 21, 9, 0, 0, 0, ZoneOffset.UTC))
+                .start(ZonedDateTime.of(2021, 9, 21, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 21, 9, 0, 0, 0, ZoneId.systemDefault()))
                 .babyProfile(babyProfile)
         );
         napRepository.saveAndFlush(
-            createEntity(em).start(ZonedDateTime.of(2021, 9, 20, 8, 0, 0, 0, ZoneOffset.UTC)).end(null).babyProfile(babyProfile)
+            createEntity(em).start(ZonedDateTime.of(2021, 9, 20, 8, 0, 0, 0, ZoneId.systemDefault())).end(null).babyProfile(babyProfile)
         );
         // when
         restNapMockMvc
@@ -495,11 +506,98 @@ class NapResourceIT {
             // then
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.sleepHours").value(7.5))
+            .andExpect(jsonPath("$.sleepHoursGoal").value(16));
+    }
+
+    @Test
+    @Transactional
+    void shouldSumNapsInHoursOfTodayWithTimeZone() throws Exception {
+        // given
+        String timeZone = "America/Sao_Paulo";
+        mockClockFixed(2021, 9, 20, 16, 30, 00, timeZone);
+
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        // valid
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 19, 23, 30, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 20, 0, 30, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 20, 7, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 20, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 20, 10, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 20, 11, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 20, 21, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 21, 0, 30, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+
+        // invalid
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 19, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 19, 9, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 21, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 21, 9, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em).start(ZonedDateTime.of(2021, 9, 20, 8, 0, 0, 0, ZoneId.systemDefault())).end(null).babyProfile(babyProfile)
+        );
+        // when
+        restNapMockMvc
+            .perform(
+                get(ENTITY_API_URL + "/today-sum-naps-in-hours-by-baby-profile/{id}?tz={tz}", babyProfile.getId(), timeZone)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.sleepHours").value(5.5))
             .andExpect(jsonPath("$.sleepHoursGoal").value(16));
     }
 
-    private void mockClockFixed(Integer year, Integer month, Integer day, Integer hour, Integer minute, Integer second) {
+    @Test
+    @Transactional
+    void shouldThowAccessDeniedExceptionWhenSumNapsInHoursOfToday() throws Exception {
+        // given
+        mockClockFixed(2021, 9, 20, 16, 30, 00, null);
+
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(2021, 9, 19, 23, 30, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(2021, 9, 20, 0, 30, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        // when
+        restNapMockMvc
+            .perform(
+                get(ENTITY_API_URL + "/today-sum-naps-in-hours-by-baby-profile/{id}", babyProfile.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", "22222222", "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isForbidden());
+    }
+
+    private void mockClockFixed(Integer year, Integer month, Integer day, Integer hour, Integer minute, Integer second, String timeZone) {
         LocalDateTime dataTimeFixedAtTest;
         if (hour != null && minute != null && second != null) {
             dataTimeFixedAtTest = LocalDateTime.of(year, month, day, hour, minute, second);
@@ -510,5 +608,8 @@ class NapResourceIT {
 
         Mockito.when(clock.instant()).thenReturn(fixedClock.instant());
         Mockito.when(clock.getZone()).thenReturn(fixedClock.getZone());
+        if (timeZone != null) {
+            Mockito.when(clock.withZone(ZoneId.of(timeZone))).thenReturn(fixedClock);
+        }
     }
 }

@@ -9,7 +9,7 @@ import com.mamazinha.baby.service.dto.NapTodayDTO;
 import com.mamazinha.baby.service.mapper.NapMapper;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -107,7 +107,7 @@ public class NapService {
         return napRepository.findById(id).map(napMapper::toDto);
     }
 
-    public NapTodayDTO getTodaySumNapsHoursByBabyProfile(Long id) {
+    public NapTodayDTO getTodaySumNapsHoursByBabyProfile(Long id, String timeZone) {
         if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
             String userId = SecurityUtils.getCurrentUserId().orElse(null);
             if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
@@ -116,8 +116,13 @@ public class NapService {
         }
 
         LocalDate nowLocalDate = LocalDate.now(clock);
-        ZonedDateTime todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneOffset.UTC);
-        ZonedDateTime tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneOffset.UTC);
+        ZonedDateTime todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.systemDefault());
+        ZonedDateTime tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.systemDefault());
+        if (timeZone != null) {
+            nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
+            todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.of(timeZone));
+            tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
+        }
 
         List<Nap> napList = napRepository.findByBabyProfileIdAndStartBetweenOrBabyProfileIdAndEndBetween(
             id,
@@ -150,10 +155,10 @@ public class NapService {
                         return 0;
                     }
                     if (
-                        nap.getStart().isAfter(todayMidnight) &&
+                        (nap.getStart().isEqual(todayMidnight) || nap.getStart().isAfter(todayMidnight)) &&
                         nap.getStart().isBefore(tomorrowMidnight) &&
                         nap.getEnd().isAfter(todayMidnight) &&
-                        nap.getEnd().isBefore(tomorrowMidnight)
+                        (nap.getEnd().isEqual(tomorrowMidnight) || nap.getEnd().isBefore(tomorrowMidnight))
                     ) {
                         return ChronoUnit.MINUTES.between(nap.getStart(), nap.getEnd());
                     }
