@@ -110,7 +110,7 @@ public class NapService {
     public NapTodayDTO getTodaySumNapsHoursByBabyProfile(Long id) {
         if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
             String userId = SecurityUtils.getCurrentUserId().orElse(null);
-            if (!napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
+            if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
                 throw new AccessDeniedException("That is not your baby profile!");
             }
         }

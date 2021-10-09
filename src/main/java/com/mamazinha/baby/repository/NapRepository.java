@@ -16,6 +16,8 @@ import org.springframework.stereotype.Repository;
 public interface NapRepository extends JpaRepository<Nap, Long> {
     Page<Nap> findByBabyProfileUserId(Pageable pageable, String string);
 
+    boolean existsByBabyProfileId(Long id);
+
     boolean existsByBabyProfileIdAndBabyProfileUserId(Long id, String string);
 
     List<Nap> findByBabyProfileIdAndStartBetweenOrEndBetween(
