@@ -576,7 +576,7 @@ class NapResourceIT {
 
     @Test
     @Transactional
-    void shouldThowAccessDeniedExceptionWhenSumNapsInHoursOfToday() throws Exception {
+    void shouldThrowAccessDeniedExceptionWhenSumNapsInHoursOfToday() throws Exception {
         // given
         mockClockFixed(2021, 9, 20, 16, 30, 00, null);
 
