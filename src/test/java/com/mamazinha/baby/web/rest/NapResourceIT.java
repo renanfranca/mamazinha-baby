@@ -428,7 +428,7 @@ class NapResourceIT {
         int databaseSizeBeforeDelete = napRepository.findAll().size();
 
         // Delete the nap
-        restNapMockMvc.perform(delete(ENTITY_API_URL, nap.getId()).accept(MediaType.APPLICATION_JSON)).andExpect(status().isNoContent());
+        restNapMockMvc.perform(delete(ENTITY_API_URL_ID, nap.getId()).accept(MediaType.APPLICATION_JSON)).andExpect(status().isNoContent());
 
         // Validate the database contains one less item
         List<Nap> napList = napRepository.findAll();
