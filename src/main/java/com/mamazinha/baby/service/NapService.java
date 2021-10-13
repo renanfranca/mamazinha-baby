@@ -5,13 +5,17 @@ import com.mamazinha.baby.repository.NapRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.NapDTO;
+import com.mamazinha.baby.service.dto.NapLastCurrentWeekDTO;
 import com.mamazinha.baby.service.dto.NapTodayDTO;
+import com.mamazinha.baby.service.dto.NapWeekDTO;
 import com.mamazinha.baby.service.mapper.NapMapper;
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -116,24 +120,36 @@ public class NapService {
         }
 
         LocalDate nowLocalDate = LocalDate.now(clock);
-        ZonedDateTime todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.systemDefault());
-        ZonedDateTime tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.systemDefault());
-        if (timeZone != null) {
-            nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
-            todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.of(timeZone));
-            tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
+
+        return new NapTodayDTO().sleepHours(sumTotalNapsInHoursByDate(id, timeZone, nowLocalDate)).sleepHoursGoal(16);
+    }
+
+    public NapLastCurrentWeekDTO getLastWeekCurrentWeekSumNapsHoursEachDayByBabyProfile(Long id, String timeZone) {
+        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            String userId = SecurityUtils.getCurrentUserId().orElse(null);
+            if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
+                throw new AccessDeniedException("That is not your baby profile!");
+            }
         }
 
-        List<Nap> napList = napRepository.findByBabyProfileIdAndStartBetweenOrBabyProfileIdAndEndBetween(
-            id,
-            todayMidnight,
-            tomorrowMidnight,
-            id,
-            todayMidnight,
-            tomorrowMidnight
-        );
+        LocalDate nowLocalDate = LocalDate.now(clock);
+        if (timeZone != null) {
+            nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
+        }
+        // Get first day of week
+        LocalDate startOfWeek = nowLocalDate.with(DayOfWeek.MONDAY);
+        // Get last day of week
+        LocalDate endOfWeek = nowLocalDate.with(DayOfWeek.SUNDAY);
+        // Get first day of last week
+        LocalDate startOfLastWeek = startOfWeek.minusDays(1).with(DayOfWeek.MONDAY);
+        // Get last day of last week
+        LocalDate endOfLastWeek = startOfLastWeek.with(DayOfWeek.SUNDAY);
 
-        return new NapTodayDTO().sleepHours(sumTotalNapsInHours(napList, todayMidnight, tomorrowMidnight)).sleepHoursGoal(16);
+        NapLastCurrentWeekDTO napLastCurrentWeekDTO = new NapLastCurrentWeekDTO().sleepHoursGoal(16);
+        napLastCurrentWeekDTO.currentWeekNaps(sumEachDayTotalNapsInHours(startOfWeek, endOfWeek, id, timeZone));
+        napLastCurrentWeekDTO.lastWeekNaps(sumEachDayTotalNapsInHours(startOfLastWeek, endOfLastWeek, id, timeZone));
+
+        return napLastCurrentWeekDTO;
     }
 
     /**
@@ -146,7 +162,41 @@ public class NapService {
         napRepository.deleteById(id);
     }
 
-    private Double sumTotalNapsInHours(List<Nap> napList, ZonedDateTime todayMidnight, ZonedDateTime tomorrowMidnight) {
+    private List<NapWeekDTO> sumEachDayTotalNapsInHours(LocalDate startDate, LocalDate endDate, Long babyProfileId, String timeZone) {
+        List<NapWeekDTO> napWeekDTOList = new ArrayList<>();
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+            napWeekDTOList.add(
+                new NapWeekDTO()
+                    .dayOfWeek(currentDate.getDayOfWeek().getValue())
+                    .sleepHours(sumTotalNapsInHoursByDate(babyProfileId, timeZone, currentDate))
+            );
+            currentDate = currentDate.plusDays(1);
+        }
+        return napWeekDTOList;
+    }
+
+    private Double sumTotalNapsInHoursByDate(Long babyProfileId, String timeZone, LocalDate localDate) {
+        ZonedDateTime todayMidnight = ZonedDateTime.of(localDate.atStartOfDay(), ZoneId.systemDefault());
+        ZonedDateTime tomorrowMidnight = ZonedDateTime.of(localDate.plusDays(1l).atStartOfDay(), ZoneId.systemDefault());
+        if (timeZone != null) {
+            todayMidnight = ZonedDateTime.of(localDate.atStartOfDay(), ZoneId.of(timeZone));
+            tomorrowMidnight = ZonedDateTime.of(localDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
+        }
+
+        List<Nap> napList = napRepository.findByBabyProfileIdAndStartBetweenOrBabyProfileIdAndEndBetween(
+            babyProfileId,
+            todayMidnight,
+            tomorrowMidnight,
+            babyProfileId,
+            todayMidnight,
+            tomorrowMidnight
+        );
+
+        return sumTotalNapsInHoursByNapList(napList, todayMidnight, tomorrowMidnight);
+    }
+
+    private Double sumTotalNapsInHoursByNapList(List<Nap> napList, ZonedDateTime todayMidnight, ZonedDateTime tomorrowMidnight) {
         return (
             napList
                 .stream()

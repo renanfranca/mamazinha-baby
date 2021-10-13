@@ -1,6 +1,8 @@
 package com.mamazinha.baby.service.dto;
 
-public class NapTodayDTO {
+import java.io.Serializable;
+
+public class NapTodayDTO implements Serializable {
 
     private Double sleepHours;
 

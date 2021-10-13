@@ -3,6 +3,7 @@ package com.mamazinha.baby.web.rest;
 import com.mamazinha.baby.repository.NapRepository;
 import com.mamazinha.baby.service.NapService;
 import com.mamazinha.baby.service.dto.NapDTO;
+import com.mamazinha.baby.service.dto.NapLastCurrentWeekDTO;
 import com.mamazinha.baby.service.dto.NapTodayDTO;
 import com.mamazinha.baby.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
@@ -175,6 +176,15 @@ public class NapResource {
     ) {
         NapTodayDTO napTodayDTO = napService.getTodaySumNapsHoursByBabyProfile(id, timeZone);
         return ResponseEntity.ok(napTodayDTO);
+    }
+
+    @GetMapping("/naps/lastweek-currentweek-sum-naps-in-hours-eachday-by-baby-profile/{id}")
+    public ResponseEntity<NapLastCurrentWeekDTO> getLastWeekCurrentWeekSumNapsHoursEachDayByBabyProfile(
+        @PathVariable Long id,
+        @RequestParam(value = "tz", required = false) String timeZone
+    ) {
+        NapLastCurrentWeekDTO napLastCurrentWeekDTO = napService.getLastWeekCurrentWeekSumNapsHoursEachDayByBabyProfile(id, timeZone);
+        return ResponseEntity.ok(napLastCurrentWeekDTO);
     }
 
     /**
