@@ -15,6 +15,7 @@ public interface HumorMapper extends EntityMapper<HumorDTO, Humor> {
     @Named("description")
     @BeanMapping(ignoreByDefault = true)
     @Mapping(target = "id", source = "id")
+    @Mapping(target = "value", source = "value")
     @Mapping(target = "description", source = "description")
     @Mapping(target = "emotico", source = "emotico")
     @Mapping(target = "emoticoContentType", source = "emoticoContentType")
