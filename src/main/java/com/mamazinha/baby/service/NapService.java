@@ -4,8 +4,8 @@ import com.mamazinha.baby.domain.Nap;
 import com.mamazinha.baby.repository.NapRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.security.SecurityUtils;
+import com.mamazinha.baby.service.dto.HumorAverageDTO;
 import com.mamazinha.baby.service.dto.NapDTO;
-import com.mamazinha.baby.service.dto.NapHumorDTO;
 import com.mamazinha.baby.service.dto.NapLastCurrentWeekDTO;
 import com.mamazinha.baby.service.dto.NapTodayDTO;
 import com.mamazinha.baby.service.dto.NapWeekDTO;
@@ -158,7 +158,7 @@ public class NapService {
         return napLastCurrentWeekDTO;
     }
 
-    public NapHumorDTO getTodayAverageNapHumorByBabyProfile(Long id, String timeZone) {
+    public HumorAverageDTO getTodayAverageNapHumorByBabyProfile(Long id, String timeZone) {
         if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
             String userId = SecurityUtils.getCurrentUserId().orElse(null);
             if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
@@ -180,7 +180,7 @@ public class NapService {
 
         List<Nap> napList = napRepository.findByBabyProfileIdAndStartGreaterThanEqualAndEndLessThan(id, todayMidnight, tomorrowMidnight);
 
-        return new NapHumorDTO()
+        return new HumorAverageDTO()
             .dayOfWeek(nowLocalDate.getDayOfWeek().getValue())
             .humorAverage(
                 napList

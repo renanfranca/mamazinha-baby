@@ -2,8 +2,8 @@ package com.mamazinha.baby.web.rest;
 
 import com.mamazinha.baby.repository.NapRepository;
 import com.mamazinha.baby.service.NapService;
+import com.mamazinha.baby.service.dto.HumorAverageDTO;
 import com.mamazinha.baby.service.dto.NapDTO;
-import com.mamazinha.baby.service.dto.NapHumorDTO;
 import com.mamazinha.baby.service.dto.NapLastCurrentWeekDTO;
 import com.mamazinha.baby.service.dto.NapTodayDTO;
 import com.mamazinha.baby.web.rest.errors.BadRequestAlertException;
@@ -189,11 +189,11 @@ public class NapResource {
     }
 
     @GetMapping("/naps/today-average-nap-humor-by-baby-profile/{id}")
-    public ResponseEntity<NapHumorDTO> getTodayAverageNapHumorByBabyProfile(
+    public ResponseEntity<HumorAverageDTO> getTodayAverageNapHumorByBabyProfile(
         @PathVariable Long id,
         @RequestParam(value = "tz", required = false) String timeZone
     ) {
-        NapHumorDTO nNapHumorDTO = napService.getTodayAverageNapHumorByBabyProfile(id, timeZone);
+        HumorAverageDTO nNapHumorDTO = napService.getTodayAverageNapHumorByBabyProfile(id, timeZone);
         return ResponseEntity.ok(nNapHumorDTO);
     }
 

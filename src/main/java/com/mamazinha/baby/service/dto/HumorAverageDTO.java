@@ -2,7 +2,7 @@ package com.mamazinha.baby.service.dto;
 
 import java.io.Serializable;
 
-public class NapHumorDTO implements Serializable {
+public class HumorAverageDTO implements Serializable {
 
     private Integer dayOfWeek;
 
@@ -20,7 +20,7 @@ public class NapHumorDTO implements Serializable {
         this.dayOfWeek = dayOfWeek;
     }
 
-    public NapHumorDTO dayOfWeek(Integer dayOfWeek) {
+    public HumorAverageDTO dayOfWeek(Integer dayOfWeek) {
         this.dayOfWeek = dayOfWeek;
         return this;
     }
@@ -29,7 +29,7 @@ public class NapHumorDTO implements Serializable {
         this.humorAverage = humorAverage;
     }
 
-    public NapHumorDTO humorAverage(Integer humorAverage) {
+    public HumorAverageDTO humorAverage(Integer humorAverage) {
         this.humorAverage = humorAverage;
         return this;
     }
