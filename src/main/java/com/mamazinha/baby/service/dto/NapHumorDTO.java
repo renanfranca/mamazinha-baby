@@ -1,6 +1,8 @@
 package com.mamazinha.baby.service.dto;
 
-public class NapHumorDTO {
+import java.io.Serializable;
+
+public class NapHumorDTO implements Serializable {
 
     private Integer dayOfWeek;
 
