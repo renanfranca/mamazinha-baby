@@ -5,6 +5,7 @@ import com.mamazinha.baby.repository.NapRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.NapDTO;
+import com.mamazinha.baby.service.dto.NapHumorDTO;
 import com.mamazinha.baby.service.dto.NapLastCurrentWeekDTO;
 import com.mamazinha.baby.service.dto.NapTodayDTO;
 import com.mamazinha.baby.service.dto.NapWeekDTO;
@@ -32,6 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class NapService {
+
+    private static final String THAT_IS_NOT_YOUR_BABY_PROFILE = "That is not your baby profile!";
 
     private final Logger log = LoggerFactory.getLogger(NapService.class);
 
@@ -115,11 +118,14 @@ public class NapService {
         if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
             String userId = SecurityUtils.getCurrentUserId().orElse(null);
             if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
-                throw new AccessDeniedException("That is not your baby profile!");
+                throw new AccessDeniedException(THAT_IS_NOT_YOUR_BABY_PROFILE);
             }
         }
 
         LocalDate nowLocalDate = LocalDate.now(clock);
+        if (timeZone != null) {
+            nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
+        }
 
         return new NapTodayDTO().sleepHours(sumTotalNapsInHoursByDate(id, timeZone, nowLocalDate)).sleepHoursGoal(16);
     }
@@ -128,7 +134,7 @@ public class NapService {
         if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
             String userId = SecurityUtils.getCurrentUserId().orElse(null);
             if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
-                throw new AccessDeniedException("That is not your baby profile!");
+                throw new AccessDeniedException(THAT_IS_NOT_YOUR_BABY_PROFILE);
             }
         }
 
@@ -150,6 +156,44 @@ public class NapService {
         napLastCurrentWeekDTO.lastWeekNaps(sumEachDayTotalNapsInHours(startOfLastWeek, endOfLastWeek, id, timeZone));
 
         return napLastCurrentWeekDTO;
+    }
+
+    public NapHumorDTO getTodayAverageNapHumorByBabyProfile(Long id, String timeZone) {
+        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            String userId = SecurityUtils.getCurrentUserId().orElse(null);
+            if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
+                throw new AccessDeniedException(THAT_IS_NOT_YOUR_BABY_PROFILE);
+            }
+        }
+
+        LocalDate nowLocalDate = LocalDate.now(clock);
+        if (timeZone != null) {
+            nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
+        }
+
+        ZonedDateTime todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.systemDefault());
+        ZonedDateTime tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.systemDefault());
+        if (timeZone != null) {
+            todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.of(timeZone));
+            tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
+        }
+
+        List<Nap> napList = napRepository.findByBabyProfileIdAndStartGreaterThanEqualAndEndLessThan(id, todayMidnight, tomorrowMidnight);
+
+        return new NapHumorDTO()
+            .dayOfWeek(nowLocalDate.getDayOfWeek().getValue())
+            .humorAverage(
+                napList
+                    .stream()
+                    .mapToInt(nap -> {
+                        if (nap.getHumor() != null && nap.getHumor().getValue() != null) {
+                            return nap.getHumor().getValue();
+                        }
+                        return 0;
+                    })
+                    .sum() /
+                napList.size()
+            );
     }
 
     /**

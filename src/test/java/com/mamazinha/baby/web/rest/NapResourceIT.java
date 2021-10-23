@@ -15,13 +15,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.mamazinha.baby.IntegrationTest;
 import com.mamazinha.baby.domain.BabyProfile;
+import com.mamazinha.baby.domain.Humor;
 import com.mamazinha.baby.domain.Nap;
 import com.mamazinha.baby.domain.enumeration.Place;
 import com.mamazinha.baby.repository.BabyProfileRepository;
+import com.mamazinha.baby.repository.HumorRepository;
 import com.mamazinha.baby.repository.NapRepository;
 import com.mamazinha.baby.security.CustomUser;
 import com.mamazinha.baby.service.dto.NapDTO;
 import com.mamazinha.baby.service.mapper.NapMapper;
+import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -34,6 +37,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -42,6 +47,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -86,6 +92,9 @@ class NapResourceIT {
 
     @Autowired
     private BabyProfileRepository babyProfileRepository;
+
+    @Autowired
+    private HumorRepository humorRepository;
 
     /**
      * Create an entity for this test.
@@ -435,42 +444,27 @@ class NapResourceIT {
         assertThat(napList).hasSize(databaseSizeBeforeDelete - 1);
     }
 
-    @Test
+    @ParameterizedTest
+    @CsvSource({ "false", "true" })
     @Transactional
-    void shouldSumNapsInHoursOfToday() throws Exception {
+    void shouldSumNapsInHoursOfToday(boolean withTimeZone) throws Exception {
         // given
-        mockClockFixed(2021, 9, 20, 16, 30, 00, null);
-
         BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
 
         createValidAndInvalidNapsByDate(2021, 9, 20, babyProfile);
         // when
+        URI uri;
+        if (withTimeZone) {
+            String timeZone = "America/Sao_Paulo";
+            mockClockFixed(2021, 9, 20, 16, 30, 00, timeZone);
+            uri = new URI(ENTITY_API_URL + "/today-sum-naps-in-hours-by-baby-profile/" + babyProfile.getId() + "?tz=" + timeZone);
+        } else {
+            mockClockFixed(2021, 9, 20, 16, 30, 00, null);
+            uri = new URI(ENTITY_API_URL + "/today-sum-naps-in-hours-by-baby-profile/" + babyProfile.getId());
+        }
         restNapMockMvc
             .perform(
-                get(ENTITY_API_URL + "/today-sum-naps-in-hours-by-baby-profile/{id}", babyProfile.getId())
-                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
-            )
-            // then
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.sleepHours").value(7.5))
-            .andExpect(jsonPath("$.sleepHoursGoal").value(16));
-    }
-
-    @Test
-    @Transactional
-    void shouldSumNapsInHoursOfTodayWithTimeZone() throws Exception {
-        // given
-        String timeZone = "America/Sao_Paulo";
-        mockClockFixed(2021, 9, 20, 16, 30, 00, timeZone);
-
-        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
-
-        createValidAndInvalidNapsByDate(2021, 9, 20, babyProfile);
-        // when
-        restNapMockMvc
-            .perform(
-                get(ENTITY_API_URL + "/today-sum-naps-in-hours-by-baby-profile/{id}?tz={tz}", babyProfile.getId(), timeZone)
+                get(uri)
                     .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             // then
@@ -504,6 +498,7 @@ class NapResourceIT {
     }
 
     @Test
+    @Transactional
     void shouldReturnSumNapsInHourByDayFromLastWeekAndCurrentWeek() throws Exception {
         // given
         mockClockFixed(2021, 9, 20, 16, 30, 00, null);
@@ -529,6 +524,88 @@ class NapResourceIT {
             .andExpect(jsonPath("$.lastWeekNaps.size()").value(7))
             .andExpect(jsonPath("$.currentWeekNaps.size()").value(7))
             .andExpect(jsonPath("$.sleepHoursGoal").value(16));
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "false", "true" })
+    @Transactional
+    void shouldReturnAverageNapHumor(boolean withTimeZone) throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+        Humor angryHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(1));
+        Humor sadHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(2));
+        Humor calmHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(3));
+        Humor happyHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(4));
+        Humor excitedHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(5));
+
+        int year = 2021;
+        int month = 10;
+        int day = 23;
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 1, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .humor(angryHumor)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 15, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 16, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .humor(calmHumor)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 17, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 18, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .humor(happyHumor)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 22, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 23, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .humor(excitedHumor)
+        );
+        //invalid
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 23, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day - 1, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .humor(sadHumor)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 23, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day + 1, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .humor(sadHumor)
+        );
+
+        // when
+        URI uri;
+        if (withTimeZone) {
+            String timeZone = "America/Sao_Paulo";
+            mockClockFixed(year, month, day, 16, 30, 00, timeZone);
+            uri = new URI(ENTITY_API_URL + "/today-average-nap-humor-by-baby-profile/" + babyProfile.getId() + "?tz=" + timeZone);
+        } else {
+            mockClockFixed(year, month, day, 16, 30, 00, null);
+            uri = new URI(ENTITY_API_URL + "/today-average-nap-humor-by-baby-profile/" + babyProfile.getId());
+        }
+        restNapMockMvc
+            .perform(
+                get(uri)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.dayOfWeek").value(6))
+            .andExpect(jsonPath("$.humorAverage").value(3))
+            .andDo(MockMvcResultHandlers.print());
     }
 
     private void createValidAndInvalidNapsByDate(Integer year, Integer month, Integer day, BabyProfile babyProfile) {
