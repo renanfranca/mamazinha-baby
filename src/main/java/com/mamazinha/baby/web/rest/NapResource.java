@@ -193,8 +193,8 @@ public class NapResource {
         @PathVariable Long id,
         @RequestParam(value = "tz", required = false) String timeZone
     ) {
-        HumorAverageDTO nNapHumorDTO = napService.getTodayAverageNapHumorByBabyProfile(id, timeZone);
-        return ResponseEntity.ok(nNapHumorDTO);
+        HumorAverageDTO humorAverageDTO = napService.getTodayAverageNapHumorByBabyProfile(id, timeZone);
+        return ResponseEntity.ok(humorAverageDTO);
     }
 
     /**
