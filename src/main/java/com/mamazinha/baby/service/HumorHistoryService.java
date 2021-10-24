@@ -1,5 +1,6 @@
 package com.mamazinha.baby.service;
 
+import com.mamazinha.baby.config.Constants;
 import com.mamazinha.baby.domain.HumorHistory;
 import com.mamazinha.baby.repository.HumorHistoryRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
@@ -27,8 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class HumorHistoryService {
-
-    private static final String THAT_IS_NOT_YOUR_BABY_PROFILE = "That is not your baby profile!";
 
     private final Logger log = LoggerFactory.getLogger(HumorHistoryService.class);
 
@@ -108,7 +107,7 @@ public class HumorHistoryService {
                 humorHistoryRepository.existsByBabyProfileId(id) &&
                 !humorHistoryRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)
             ) {
-                throw new AccessDeniedException(THAT_IS_NOT_YOUR_BABY_PROFILE);
+                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
             }
         }
 

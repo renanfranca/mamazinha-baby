@@ -1,5 +1,6 @@
 package com.mamazinha.baby.service;
 
+import com.mamazinha.baby.config.Constants;
 import com.mamazinha.baby.domain.Nap;
 import com.mamazinha.baby.repository.NapRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
@@ -33,8 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class NapService {
-
-    private static final String THAT_IS_NOT_YOUR_BABY_PROFILE = "That is not your baby profile!";
 
     private final Logger log = LoggerFactory.getLogger(NapService.class);
 
@@ -118,7 +117,7 @@ public class NapService {
         if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
             String userId = SecurityUtils.getCurrentUserId().orElse(null);
             if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
-                throw new AccessDeniedException(THAT_IS_NOT_YOUR_BABY_PROFILE);
+                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
             }
         }
 
@@ -134,7 +133,7 @@ public class NapService {
         if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
             String userId = SecurityUtils.getCurrentUserId().orElse(null);
             if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
-                throw new AccessDeniedException(THAT_IS_NOT_YOUR_BABY_PROFILE);
+                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
             }
         }
 
@@ -162,7 +161,7 @@ public class NapService {
         if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
             String userId = SecurityUtils.getCurrentUserId().orElse(null);
             if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
-                throw new AccessDeniedException(THAT_IS_NOT_YOUR_BABY_PROFILE);
+                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
             }
         }
 
