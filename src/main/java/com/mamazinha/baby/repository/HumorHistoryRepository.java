@@ -1,7 +1,9 @@
 package com.mamazinha.baby.repository;
 
 import com.mamazinha.baby.domain.HumorHistory;
-import org.springframework.data.jpa.repository.*;
+import java.time.ZonedDateTime;
+import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -9,4 +11,14 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface HumorHistoryRepository extends JpaRepository<HumorHistory, Long> {}
+public interface HumorHistoryRepository extends JpaRepository<HumorHistory, Long> {
+    boolean existsByBabyProfileId(Long id);
+
+    boolean existsByBabyProfileIdAndBabyProfileUserId(Long id, String userId);
+
+    List<HumorHistory> findByBabyProfileIdAndDateGreaterThanEqualAndDateLessThan(
+        Long id,
+        ZonedDateTime todayMidnight,
+        ZonedDateTime tomorrowMidnight
+    );
+}

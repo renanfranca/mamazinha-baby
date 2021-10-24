@@ -3,15 +3,30 @@ package com.mamazinha.baby.web.rest;
 import static com.mamazinha.baby.web.rest.TestUtil.sameInstant;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.mamazinha.baby.IntegrationTest;
+import com.mamazinha.baby.domain.BabyProfile;
+import com.mamazinha.baby.domain.Humor;
 import com.mamazinha.baby.domain.HumorHistory;
+import com.mamazinha.baby.repository.BabyProfileRepository;
 import com.mamazinha.baby.repository.HumorHistoryRepository;
+import com.mamazinha.baby.repository.HumorRepository;
+import com.mamazinha.baby.security.CustomUser;
 import com.mamazinha.baby.service.dto.HumorHistoryDTO;
 import com.mamazinha.baby.service.mapper.HumorHistoryMapper;
+import java.net.URI;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -21,11 +36,17 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -59,6 +80,15 @@ class HumorHistoryResourceIT {
 
     private HumorHistory humorHistory;
 
+    @MockBean
+    private Clock clock;
+
+    @Autowired
+    private BabyProfileRepository babyProfileRepository;
+
+    @Autowired
+    private HumorRepository humorRepository;
+
     /**
      * Create an entity for this test.
      *
@@ -83,6 +113,8 @@ class HumorHistoryResourceIT {
 
     @BeforeEach
     public void initTest() {
+        Mockito.when(clock.instant()).thenReturn(Clock.systemDefaultZone().instant());
+        Mockito.when(clock.getZone()).thenReturn(Clock.systemDefaultZone().getZone());
         humorHistory = createEntity(em);
     }
 
@@ -401,5 +433,97 @@ class HumorHistoryResourceIT {
         // Validate the database contains one less item
         List<HumorHistory> humorHistoryList = humorHistoryRepository.findAll();
         assertThat(humorHistoryList).hasSize(databaseSizeBeforeDelete - 1);
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "false", "true" })
+    @Transactional
+    void shouldReturnAverageHumorHistory(boolean withTimeZone) throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+        Humor angryHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(1));
+        Humor sadHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(2));
+        Humor calmHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(3));
+        Humor happyHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(4));
+        Humor excitedHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(5));
+
+        int year = 2021;
+        int month = 10;
+        int day = 24;
+        humorHistoryRepository.saveAndFlush(
+            createEntity(em)
+                .date(ZonedDateTime.of(year, month, day, 1, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .humor(angryHumor)
+        );
+        humorHistoryRepository.saveAndFlush(
+            createEntity(em)
+                .date(ZonedDateTime.of(year, month, day, 16, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .humor(calmHumor)
+        );
+        humorHistoryRepository.saveAndFlush(
+            createEntity(em)
+                .date(ZonedDateTime.of(year, month, day, 18, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .humor(happyHumor)
+        );
+        humorHistoryRepository.saveAndFlush(
+            createEntity(em)
+                .date(ZonedDateTime.of(year, month, day, 23, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .humor(excitedHumor)
+        );
+        //invalid
+        humorHistoryRepository.saveAndFlush(
+            createEntity(em)
+                .date(ZonedDateTime.of(year, month, day - 1, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .humor(sadHumor)
+        );
+        humorHistoryRepository.saveAndFlush(
+            createEntity(em)
+                .date(ZonedDateTime.of(year, month, day + 1, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .humor(sadHumor)
+        );
+
+        // when
+        URI uri;
+        if (withTimeZone) {
+            String timeZone = "America/Sao_Paulo";
+            mockClockFixed(year, month, day, 16, 30, 00, timeZone);
+            uri = new URI(ENTITY_API_URL + "/today-average-humor-history-by-baby-profile/" + babyProfile.getId() + "?tz=" + timeZone);
+        } else {
+            mockClockFixed(year, month, day, 16, 30, 00, null);
+            uri = new URI(ENTITY_API_URL + "/today-average-humor-history-by-baby-profile/" + babyProfile.getId());
+        }
+        restHumorHistoryMockMvc
+            .perform(
+                get(uri)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.dayOfWeek").value(7))
+            .andExpect(jsonPath("$.humorAverage").value(3))
+            .andDo(MockMvcResultHandlers.print());
+    }
+
+    private void mockClockFixed(Integer year, Integer month, Integer day, Integer hour, Integer minute, Integer second, String timeZone) {
+        LocalDateTime dataTimeFixedAtTest;
+        if (hour != null && minute != null && second != null) {
+            dataTimeFixedAtTest = LocalDateTime.of(year, month, day, hour, minute, second);
+        } else {
+            dataTimeFixedAtTest = LocalDate.of(year, month, day).atStartOfDay();
+        }
+        Clock fixedClock = Clock.fixed(dataTimeFixedAtTest.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+
+        Mockito.when(clock.instant()).thenReturn(fixedClock.instant());
+        Mockito.when(clock.getZone()).thenReturn(fixedClock.getZone());
+        if (timeZone != null) {
+            Mockito.when(clock.withZone(ZoneId.of(timeZone))).thenReturn(fixedClock);
+        }
     }
 }
