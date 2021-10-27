@@ -2,9 +2,11 @@ package com.mamazinha.baby.service;
 
 import com.mamazinha.baby.config.Constants;
 import com.mamazinha.baby.domain.Nap;
+import com.mamazinha.baby.domain.enumeration.Place;
 import com.mamazinha.baby.repository.NapRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.security.SecurityUtils;
+import com.mamazinha.baby.service.dto.FavoriteNapPlaceDTO;
 import com.mamazinha.baby.service.dto.HumorAverageDTO;
 import com.mamazinha.baby.service.dto.NapDTO;
 import com.mamazinha.baby.service.dto.NapLastCurrentWeekDTO;
@@ -18,8 +20,12 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -114,12 +120,7 @@ public class NapService {
     }
 
     public NapTodayDTO getTodaySumNapsHoursByBabyProfile(Long id, String timeZone) {
-        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
-            String userId = SecurityUtils.getCurrentUserId().orElse(null);
-            if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
-                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
-            }
-        }
+        verifyAuthorizedOperation(id);
 
         LocalDate nowLocalDate = LocalDate.now(clock);
         if (timeZone != null) {
@@ -130,12 +131,7 @@ public class NapService {
     }
 
     public NapLastCurrentWeekDTO getLastWeekCurrentWeekSumNapsHoursEachDayByBabyProfile(Long id, String timeZone) {
-        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
-            String userId = SecurityUtils.getCurrentUserId().orElse(null);
-            if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
-                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
-            }
-        }
+        verifyAuthorizedOperation(id);
 
         LocalDate nowLocalDate = LocalDate.now(clock);
         if (timeZone != null) {
@@ -158,12 +154,7 @@ public class NapService {
     }
 
     public HumorAverageDTO getTodayAverageNapHumorByBabyProfile(Long id, String timeZone) {
-        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
-            String userId = SecurityUtils.getCurrentUserId().orElse(null);
-            if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
-                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
-            }
-        }
+        verifyAuthorizedOperation(id);
 
         LocalDate nowLocalDate = LocalDate.now(clock);
         if (timeZone != null) {
@@ -193,6 +184,39 @@ public class NapService {
                     .sum() /
                 napList.size()
             );
+    }
+
+    private void verifyAuthorizedOperation(Long id) {
+        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            String userId = SecurityUtils.getCurrentUserId().orElse(null);
+            if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
+                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
+            }
+        }
+    }
+
+    public FavoriteNapPlaceDTO getFavoriteNapPlaceFromLastDaysByBabyProfile(Long id, Integer lastDays, String timeZone) {
+        verifyAuthorizedOperation(id);
+
+        LocalDate nowLocalDate = LocalDate.now(clock);
+        ZonedDateTime rightNow = ZonedDateTime.now(ZoneId.systemDefault());
+        ZonedDateTime daysAgo = ZonedDateTime.of(nowLocalDate.minusDays(lastDays).atStartOfDay(), ZoneId.systemDefault());
+        if (timeZone != null) {
+            nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
+            rightNow = ZonedDateTime.now(ZoneId.of(timeZone));
+            daysAgo = ZonedDateTime.of(nowLocalDate.minusDays(lastDays).atStartOfDay(), ZoneId.of(timeZone));
+        }
+
+        List<Nap> napList = napRepository.findByBabyProfileIdAndStartGreaterThanEqualAndEndLessThan(id, daysAgo, rightNow);
+
+        //https://stackoverflow.com/a/47844261/1184154
+        Map<Place, Long> groupByPlaceMap = napList.stream().collect(Collectors.groupingBy(Nap::getPlace, Collectors.counting()));
+        //https://www.baeldung.com/java-find-map-max
+        Optional<Entry<Place, Long>> maxPlaceEntry = groupByPlaceMap.entrySet().stream().max(Comparator.comparing(Map.Entry::getValue));
+        return new FavoriteNapPlaceDTO()
+            .periodInDays(lastDays)
+            .favoritePlace(maxPlaceEntry.isPresent() ? maxPlaceEntry.get().getKey() : null)
+            .amountOfTimes(maxPlaceEntry.isPresent() ? maxPlaceEntry.get().getValue() : 0l);
     }
 
     /**
