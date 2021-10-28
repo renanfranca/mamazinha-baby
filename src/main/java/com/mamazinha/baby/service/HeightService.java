@@ -1,5 +1,6 @@
 package com.mamazinha.baby.service;
 
+import com.mamazinha.baby.config.Constants;
 import com.mamazinha.baby.domain.Height;
 import com.mamazinha.baby.repository.HeightRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,6 +86,16 @@ public class HeightService {
         return Page.empty();
     }
 
+    @Transactional(readOnly = true)
+    public Optional<HeightDTO> findLatestByBabyProfile(Long id) {
+        verifyAuthorizedOperation(id);
+        Optional<String> userId = SecurityUtils.getCurrentUserId();
+        if (userId.isPresent()) {
+            return heightRepository.findFirstByBabyProfileIdOrderByDateDesc(id).map(heightMapper::toDto);
+        }
+        return Optional.ofNullable(new HeightDTO());
+    }
+
     /**
      * Get one height by id.
      *
@@ -104,5 +116,14 @@ public class HeightService {
     public void delete(Long id) {
         log.debug("Request to delete Height : {}", id);
         heightRepository.deleteById(id);
+    }
+
+    private void verifyAuthorizedOperation(Long id) {
+        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            String userId = SecurityUtils.getCurrentUserId().orElse(null);
+            if (heightRepository.existsByBabyProfileId(id) && !heightRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
+                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.mamazinha.baby.repository;
 
 import com.mamazinha.baby.domain.Height;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +14,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface HeightRepository extends JpaRepository<Height, Long> {
     Page<Height> findByBabyProfileUserId(Pageable pageable, String string);
+
+    boolean existsByBabyProfileId(Long id);
+
+    boolean existsByBabyProfileIdAndBabyProfileUserId(Long id, String userId);
+
+    Optional<Height> findFirstByBabyProfileIdOrderByDateDesc(Long id);
 }

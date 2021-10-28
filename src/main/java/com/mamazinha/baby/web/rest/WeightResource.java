@@ -161,7 +161,6 @@ public class WeightResource {
 
     @GetMapping("/weights/latest-weight-by-baby-profile/{id}")
     public ResponseEntity<WeightDTO> getLatestWeight(@PathVariable Long id) {
-        log.debug("REST request to get a page of Weights");
         Optional<WeightDTO> weightDTO = weightService.findLatestByBabyProfile(id);
         return ResponseEntity.ok(weightDTO.orElse(null));
     }
