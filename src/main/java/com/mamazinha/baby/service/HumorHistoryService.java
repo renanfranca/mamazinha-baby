@@ -85,7 +85,14 @@ public class HumorHistoryService {
     @Transactional(readOnly = true)
     public Page<HumorHistoryDTO> findAll(Pageable pageable) {
         log.debug("Request to get all HumorHistories");
-        return humorHistoryRepository.findAll(pageable).map(humorHistoryMapper::toDto);
+        if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            return humorHistoryRepository.findAll(pageable).map(humorHistoryMapper::toDto);
+        }
+        Optional<String> userId = SecurityUtils.getCurrentUserId();
+        if (userId.isPresent()) {
+            return humorHistoryRepository.findByBabyProfileUserId(pageable, userId.get()).map(humorHistoryMapper::toDto);
+        }
+        return Page.empty();
     }
 
     /**

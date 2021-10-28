@@ -2,6 +2,8 @@ package com.mamazinha.baby.service;
 
 import com.mamazinha.baby.domain.Weight;
 import com.mamazinha.baby.repository.WeightRepository;
+import com.mamazinha.baby.security.AuthoritiesConstants;
+import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.WeightDTO;
 import com.mamazinha.baby.service.mapper.WeightMapper;
 import java.util.Optional;
@@ -72,7 +74,14 @@ public class WeightService {
     @Transactional(readOnly = true)
     public Page<WeightDTO> findAll(Pageable pageable) {
         log.debug("Request to get all Weights");
-        return weightRepository.findAll(pageable).map(weightMapper::toDto);
+        if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            return weightRepository.findAll(pageable).map(weightMapper::toDto);
+        }
+        Optional<String> userId = SecurityUtils.getCurrentUserId();
+        if (userId.isPresent()) {
+            return weightRepository.findByBabyProfileUserId(pageable, userId.get()).map(weightMapper::toDto);
+        }
+        return Page.empty();
     }
 
     /**

@@ -2,6 +2,8 @@ package com.mamazinha.baby.service;
 
 import com.mamazinha.baby.domain.Height;
 import com.mamazinha.baby.repository.HeightRepository;
+import com.mamazinha.baby.security.AuthoritiesConstants;
+import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.HeightDTO;
 import com.mamazinha.baby.service.mapper.HeightMapper;
 import java.util.Optional;
@@ -72,7 +74,14 @@ public class HeightService {
     @Transactional(readOnly = true)
     public Page<HeightDTO> findAll(Pageable pageable) {
         log.debug("Request to get all Heights");
-        return heightRepository.findAll(pageable).map(heightMapper::toDto);
+        if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            return heightRepository.findAll(pageable).map(heightMapper::toDto);
+        }
+        Optional<String> userId = SecurityUtils.getCurrentUserId();
+        if (userId.isPresent()) {
+            return heightRepository.findByBabyProfileUserId(pageable, userId.get()).map(heightMapper::toDto);
+        }
+        return Page.empty();
     }
 
     /**

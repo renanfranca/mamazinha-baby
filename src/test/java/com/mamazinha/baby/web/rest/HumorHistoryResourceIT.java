@@ -3,6 +3,7 @@ package com.mamazinha.baby.web.rest;
 import static com.mamazinha.baby.web.rest.TestUtil.sameInstant;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -166,7 +167,27 @@ class HumorHistoryResourceIT {
 
         // Get all the humorHistoryList
         restHumorHistoryMockMvc
-            .perform(get(ENTITY_API_URL + "?sort=id,desc"))
+            .perform(get(ENTITY_API_URL + "?sort=id,desc").with(user("admin").roles("ADMIN")))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(humorHistory.getId().intValue())))
+            .andExpect(jsonPath("$.[*].date").value(hasItem(sameInstant(DEFAULT_DATE))));
+    }
+
+    @Test
+    @Transactional
+    void getAllHumorHistoriesWhithUserRole() throws Exception {
+        // Initialize the database
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+        humorHistory.babyProfile(babyProfile);
+        humorHistoryRepository.saveAndFlush(humorHistory);
+
+        // Get all the humorHistoryList
+        restHumorHistoryMockMvc
+            .perform(
+                get(ENTITY_API_URL + "?sort=id,desc")
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(humorHistory.getId().intValue())))
