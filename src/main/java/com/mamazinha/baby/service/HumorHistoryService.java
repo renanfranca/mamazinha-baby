@@ -129,6 +129,9 @@ public class HumorHistoryService {
             tomorrowMidnight
         );
 
+        if (humorHistoryList.isEmpty()) {
+            return null;
+        }
         return new HumorAverageDTO()
             .dayOfWeek(nowLocalDate.getDayOfWeek().getValue())
             .humorAverage(
