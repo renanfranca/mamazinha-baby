@@ -21,7 +21,10 @@ import com.mamazinha.baby.repository.WeightRepository;
 import com.mamazinha.baby.security.CustomUser;
 import com.mamazinha.baby.service.dto.WeightDTO;
 import com.mamazinha.baby.service.mapper.WeightMapper;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -31,8 +34,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
@@ -73,6 +78,9 @@ class WeightResourceIT {
 
     private Weight weight;
 
+    @MockBean
+    private Clock clock;
+
     @Autowired
     private BabyProfileRepository babyProfileRepository;
 
@@ -100,6 +108,8 @@ class WeightResourceIT {
 
     @BeforeEach
     public void initTest() {
+        Mockito.when(clock.instant()).thenReturn(Clock.systemDefaultZone().instant());
+        Mockito.when(clock.getZone()).thenReturn(Clock.systemDefaultZone().getZone());
         weight = createEntity(em);
     }
 
@@ -211,6 +221,60 @@ class WeightResourceIT {
             .andExpect(jsonPath("$.[*].id").value(hasItem(weight.getId().intValue())))
             .andExpect(jsonPath("$.[*].value").value(hasItem(DEFAULT_VALUE.doubleValue())))
             .andExpect(jsonPath("$.[*].date").value(hasItem(sameInstant(DEFAULT_DATE))));
+    }
+
+    @Test
+    @Transactional
+    void shouldThrowAccessDeniedExceptionWhenGetLatestWeightByBabyProfile() throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        weightRepository.saveAndFlush(weight.babyProfile(babyProfile));
+        // when
+        restWeightMockMvc
+            .perform(
+                get(ENTITY_API_URL + "/latest-weight-by-baby-profile/{id}", babyProfile.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", "another userId value", "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @Transactional
+    void getLatestWeightByBabyProfile() throws Exception {
+        // given
+        Integer year = 2021;
+        Integer month = 10;
+        Integer day = 28;
+        Integer hour = 8;
+        // Initialize the database
+        mockClockFixed(year, month, day, hour, 35, 00);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+        weightRepository.saveAndFlush(
+            createEntity(em).date((ZonedDateTime.of(year, month, day - 3, hour, 30, 0, 0, ZoneId.systemDefault()))).babyProfile(babyProfile)
+        );
+        weightRepository.saveAndFlush(
+            createEntity(em).date((ZonedDateTime.of(year, month, day - 2, hour, 30, 0, 0, ZoneId.systemDefault()))).babyProfile(babyProfile)
+        );
+        weightRepository.saveAndFlush(
+            createEntity(em).date((ZonedDateTime.of(year, month, day - 1, hour, 30, 0, 0, ZoneId.systemDefault()))).babyProfile(babyProfile)
+        );
+        weightRepository
+            .saveAndFlush(weight.date((ZonedDateTime.of(year, month, day, hour, 30, 0, 0, ZoneId.systemDefault()))))
+            .babyProfile(babyProfile);
+
+        // when
+        restWeightMockMvc
+            .perform(
+                get(ENTITY_API_URL + "/latest-weight-by-baby-profile/{id}", babyProfile.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.id").value(weight.getId().intValue()))
+            .andExpect(jsonPath("$.value").value(DEFAULT_VALUE.doubleValue()))
+            .andExpect(jsonPath("$.date").value(sameInstant((ZonedDateTime.of(year, month, day, hour, 30, 0, 0, ZoneId.systemDefault())))));
     }
 
     @Test
@@ -475,5 +539,18 @@ class WeightResourceIT {
         // Validate the database contains one less item
         List<Weight> weightList = weightRepository.findAll();
         assertThat(weightList).hasSize(databaseSizeBeforeDelete - 1);
+    }
+
+    private void mockClockFixed(Integer year, Integer month, Integer day, Integer hour, Integer minute, Integer second) {
+        LocalDateTime dataTimeFixedAtTest;
+        if (hour != null && minute != null && second != null) {
+            dataTimeFixedAtTest = LocalDateTime.of(year, month, day, hour, minute, second);
+        } else {
+            dataTimeFixedAtTest = LocalDate.of(year, month, day).atStartOfDay();
+        }
+        Clock fixedClock = Clock.fixed(dataTimeFixedAtTest.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+
+        Mockito.when(clock.instant()).thenReturn(fixedClock.instant());
+        Mockito.when(clock.getZone()).thenReturn(fixedClock.getZone());
     }
 }
