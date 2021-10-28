@@ -119,6 +119,7 @@ public class NapService {
         return napRepository.findById(id).map(napMapper::toDto);
     }
 
+    @Transactional(readOnly = true)
     public NapTodayDTO getTodaySumNapsHoursByBabyProfile(Long id, String timeZone) {
         verifyAuthorizedOperation(id);
 
@@ -130,6 +131,7 @@ public class NapService {
         return new NapTodayDTO().sleepHours(sumTotalNapsInHoursByDate(id, timeZone, nowLocalDate)).sleepHoursGoal(16);
     }
 
+    @Transactional(readOnly = true)
     public NapLastCurrentWeekDTO getLastWeekCurrentWeekSumNapsHoursEachDayByBabyProfile(Long id, String timeZone) {
         verifyAuthorizedOperation(id);
 
@@ -153,6 +155,7 @@ public class NapService {
         return napLastCurrentWeekDTO;
     }
 
+    @Transactional(readOnly = true)
     public HumorAverageDTO getTodayAverageNapHumorByBabyProfile(Long id, String timeZone) {
         verifyAuthorizedOperation(id);
 

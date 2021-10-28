@@ -107,6 +107,7 @@ public class HumorHistoryService {
         return humorHistoryRepository.findById(id).map(humorHistoryMapper::toDto);
     }
 
+    @Transactional(readOnly = true)
     public HumorAverageDTO getTodayAverageHumorHistoryByBabyProfile(Long id, String timeZone) {
         if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
             String userId = SecurityUtils.getCurrentUserId().orElse(null);
