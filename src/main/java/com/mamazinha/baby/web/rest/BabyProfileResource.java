@@ -1,9 +1,11 @@
 package com.mamazinha.baby.web.rest;
 
 import com.mamazinha.baby.repository.BabyProfileRepository;
+import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.service.BabyProfileService;
 import com.mamazinha.baby.service.dto.BabyProfileDTO;
 import com.mamazinha.baby.web.rest.errors.BadRequestAlertException;
+import io.micrometer.core.annotation.Timed;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -17,9 +19,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
@@ -145,6 +155,7 @@ public class BabyProfileResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of babyProfiles in body.
      */
     @GetMapping("/baby-profiles")
+    @Timed
     public ResponseEntity<List<BabyProfileDTO>> getAllBabyProfiles(Pageable pageable) {
         log.debug("REST request to get a page of BabyProfiles");
         Page<BabyProfileDTO> page = babyProfileService.findAll(pageable);
@@ -172,6 +183,8 @@ public class BabyProfileResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/baby-profiles/{id}")
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @Timed
     public ResponseEntity<Void> deleteBabyProfile(@PathVariable Long id) {
         log.debug("REST request to delete BabyProfile : {}", id);
         babyProfileService.delete(id);

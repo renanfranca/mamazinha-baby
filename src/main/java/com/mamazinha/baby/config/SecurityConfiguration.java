@@ -1,10 +1,9 @@
 package com.mamazinha.baby.config;
 
-import com.mamazinha.baby.security.*;
-import com.mamazinha.baby.security.jwt.*;
-import org.springframework.context.annotation.Bean;
+import com.mamazinha.baby.security.AuthoritiesConstants;
+import com.mamazinha.baby.security.jwt.JWTConfigurer;
+import com.mamazinha.baby.security.jwt.TokenProvider;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -66,6 +65,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             .antMatchers("/api/authenticate").permitAll()
             .antMatchers("/api/admin/**").hasAuthority(AuthoritiesConstants.ADMIN)
+            .antMatchers("/api/humors/**").hasAuthority(AuthoritiesConstants.ADMIN)
+            .antMatchers("/api/breast-feeds/**").hasAuthority(AuthoritiesConstants.ADMIN)
             .antMatchers("/api/**").authenticated()
             .antMatchers("/management/health").permitAll()
             .antMatchers("/management/health/**").permitAll()
