@@ -5,7 +5,6 @@ import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.service.BabyProfileService;
 import com.mamazinha.baby.service.dto.BabyProfileDTO;
 import com.mamazinha.baby.web.rest.errors.BadRequestAlertException;
-import io.micrometer.core.annotation.Timed;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -155,7 +154,6 @@ public class BabyProfileResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of babyProfiles in body.
      */
     @GetMapping("/baby-profiles")
-    @Timed
     public ResponseEntity<List<BabyProfileDTO>> getAllBabyProfiles(Pageable pageable) {
         log.debug("REST request to get a page of BabyProfiles");
         Page<BabyProfileDTO> page = babyProfileService.findAll(pageable);
@@ -184,7 +182,6 @@ public class BabyProfileResource {
      */
     @DeleteMapping("/baby-profiles/{id}")
     @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
-    @Timed
     public ResponseEntity<Void> deleteBabyProfile(@PathVariable Long id) {
         log.debug("REST request to delete BabyProfile : {}", id);
         babyProfileService.delete(id);
