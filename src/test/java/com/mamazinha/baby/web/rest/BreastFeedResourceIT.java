@@ -3,8 +3,15 @@ package com.mamazinha.baby.web.rest;
 import static com.mamazinha.baby.web.rest.TestUtil.sameInstant;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.mamazinha.baby.IntegrationTest;
 import com.mamazinha.baby.domain.BreastFeed;
@@ -100,7 +107,12 @@ class BreastFeedResourceIT {
         // Create the BreastFeed
         BreastFeedDTO breastFeedDTO = breastFeedMapper.toDto(breastFeed);
         restBreastFeedMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(breastFeedDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(breastFeedDTO))
+                    .with(user("admin").roles("ADMIN"))
+            )
             .andExpect(status().isCreated());
 
         // Validate the BreastFeed in the database
@@ -123,7 +135,12 @@ class BreastFeedResourceIT {
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restBreastFeedMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(breastFeedDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(breastFeedDTO))
+                    .with(user("admin").roles("ADMIN"))
+            )
             .andExpect(status().isBadRequest());
 
         // Validate the BreastFeed in the database
@@ -139,7 +156,7 @@ class BreastFeedResourceIT {
 
         // Get all the breastFeedList
         restBreastFeedMockMvc
-            .perform(get(ENTITY_API_URL + "?sort=id,desc"))
+            .perform(get(ENTITY_API_URL + "?sort=id,desc").with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(breastFeed.getId().intValue())))
@@ -156,7 +173,7 @@ class BreastFeedResourceIT {
 
         // Get the breastFeed
         restBreastFeedMockMvc
-            .perform(get(ENTITY_API_URL_ID, breastFeed.getId()))
+            .perform(get(ENTITY_API_URL_ID, breastFeed.getId()).with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(breastFeed.getId().intValue()))
@@ -169,7 +186,9 @@ class BreastFeedResourceIT {
     @Transactional
     void getNonExistingBreastFeed() throws Exception {
         // Get the breastFeed
-        restBreastFeedMockMvc.perform(get(ENTITY_API_URL_ID, Long.MAX_VALUE)).andExpect(status().isNotFound());
+        restBreastFeedMockMvc
+            .perform(get(ENTITY_API_URL_ID, Long.MAX_VALUE).with(user("admin").roles("ADMIN")))
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -192,6 +211,7 @@ class BreastFeedResourceIT {
                 put(ENTITY_API_URL_ID, breastFeedDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(TestUtil.convertObjectToJsonBytes(breastFeedDTO))
+                    .with(user("admin").roles("ADMIN"))
             )
             .andExpect(status().isOk());
 
@@ -219,6 +239,7 @@ class BreastFeedResourceIT {
                 put(ENTITY_API_URL_ID, breastFeedDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(TestUtil.convertObjectToJsonBytes(breastFeedDTO))
+                    .with(user("admin").roles("ADMIN"))
             )
             .andExpect(status().isBadRequest());
 
@@ -242,6 +263,7 @@ class BreastFeedResourceIT {
                 put(ENTITY_API_URL_ID, count.incrementAndGet())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(TestUtil.convertObjectToJsonBytes(breastFeedDTO))
+                    .with(user("admin").roles("ADMIN"))
             )
             .andExpect(status().isBadRequest());
 
@@ -261,7 +283,12 @@ class BreastFeedResourceIT {
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restBreastFeedMockMvc
-            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(breastFeedDTO)))
+            .perform(
+                put(ENTITY_API_URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(breastFeedDTO))
+                    .with(user("admin").roles("ADMIN"))
+            )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the BreastFeed in the database
@@ -288,6 +315,7 @@ class BreastFeedResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedBreastFeed.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(partialUpdatedBreastFeed))
+                    .with(user("admin").roles("ADMIN"))
             )
             .andExpect(status().isOk());
 
@@ -319,6 +347,7 @@ class BreastFeedResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedBreastFeed.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(partialUpdatedBreastFeed))
+                    .with(user("admin").roles("ADMIN"))
             )
             .andExpect(status().isOk());
 
@@ -346,6 +375,7 @@ class BreastFeedResourceIT {
                 patch(ENTITY_API_URL_ID, breastFeedDTO.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(breastFeedDTO))
+                    .with(user("admin").roles("ADMIN"))
             )
             .andExpect(status().isBadRequest());
 
@@ -369,6 +399,7 @@ class BreastFeedResourceIT {
                 patch(ENTITY_API_URL_ID, count.incrementAndGet())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(breastFeedDTO))
+                    .with(user("admin").roles("ADMIN"))
             )
             .andExpect(status().isBadRequest());
 
@@ -389,7 +420,10 @@ class BreastFeedResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restBreastFeedMockMvc
             .perform(
-                patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(TestUtil.convertObjectToJsonBytes(breastFeedDTO))
+                patch(ENTITY_API_URL)
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(breastFeedDTO))
+                    .with(user("admin").roles("ADMIN"))
             )
             .andExpect(status().isMethodNotAllowed());
 
@@ -408,7 +442,7 @@ class BreastFeedResourceIT {
 
         // Delete the breastFeed
         restBreastFeedMockMvc
-            .perform(delete(ENTITY_API_URL_ID, breastFeed.getId()).accept(MediaType.APPLICATION_JSON))
+            .perform(delete(ENTITY_API_URL_ID, breastFeed.getId()).accept(MediaType.APPLICATION_JSON).with(user("admin").roles("ADMIN")))
             .andExpect(status().isNoContent());
 
         // Validate the database contains one less item

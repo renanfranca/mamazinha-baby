@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.mamazinha.baby.IntegrationTest;
 import com.mamazinha.baby.domain.BabyProfile;
 import com.mamazinha.baby.repository.BabyProfileRepository;
+import com.mamazinha.baby.security.CustomUser;
 import com.mamazinha.baby.service.dto.BabyProfileDTO;
 import com.mamazinha.baby.service.mapper.BabyProfileMapper;
 import java.time.Instant;
@@ -34,7 +35,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Base64Utils;
 
@@ -150,6 +153,25 @@ class BabyProfileResourceIT {
         assertThat(testBabyProfile.getSign()).isEqualTo(DEFAULT_SIGN);
         assertThat(testBabyProfile.getMain()).isEqualTo(DEFAULT_MAIN);
         assertThat(testBabyProfile.getUserId()).isEqualTo(DEFAULT_USER_ID);
+    }
+
+    @Test
+    @Transactional
+    void shouldThrowAccessDeniedExceptionWhenReachMaxBabyProfileAllowedForUserRoleAuthority() throws Exception {
+        // given
+        babyProfileRepository.saveAndFlush(createEntity(em));
+        BabyProfileDTO babyProfileDTO = babyProfileMapper.toDto(babyProfile);
+        // when
+        restBabyProfileMockMvc
+            .perform(
+                post(ENTITY_API_URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(babyProfileDTO))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isForbidden())
+            .andDo(MockMvcResultHandlers.print());
     }
 
     @Test
@@ -524,7 +546,7 @@ class BabyProfileResourceIT {
 
         // Delete the babyProfile
         restBabyProfileMockMvc
-            .perform(delete(ENTITY_API_URL_ID, babyProfile.getId()).accept(MediaType.APPLICATION_JSON))
+            .perform(delete(ENTITY_API_URL_ID, babyProfile.getId()).accept(MediaType.APPLICATION_JSON).with(user("admin").roles("ADMIN")))
             .andExpect(status().isNoContent());
 
         // Validate the database contains one less item

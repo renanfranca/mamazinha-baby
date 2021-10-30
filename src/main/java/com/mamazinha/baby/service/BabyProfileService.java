@@ -1,5 +1,6 @@
 package com.mamazinha.baby.service;
 
+import com.mamazinha.baby.config.Constants;
 import com.mamazinha.baby.domain.BabyProfile;
 import com.mamazinha.baby.repository.BabyProfileRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class BabyProfileService {
+
+    private static final int MAX_BABY_PROFILE_ALLOWED_FOR_USER_ROLE_AUTHORITY = 1;
 
     private final Logger log = LoggerFactory.getLogger(BabyProfileService.class);
 
@@ -46,6 +50,12 @@ public class BabyProfileService {
         if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
             Optional<String> userId = SecurityUtils.getCurrentUserId();
             if (userId.isPresent()) {
+                if (
+                    babyProfileRepository.findByUserId(Pageable.unpaged(), userId.get()).getTotalElements() >=
+                    MAX_BABY_PROFILE_ALLOWED_FOR_USER_ROLE_AUTHORITY
+                ) {
+                    throw new AccessDeniedException(Constants.REACH_MAX_BABY_PROFILE_ALLOWED_FOR_USER_ROLE_AUTHORITY);
+                }
                 babyProfile.userId(userId.get());
             }
         }
@@ -122,12 +132,10 @@ public class BabyProfileService {
             babyProfileRepository
                 .findByUserIdAndIdNotIn(userId, Arrays.asList(id))
                 .stream()
-                .map(
-                    babyProfile -> {
-                        babyProfile.main(false);
-                        return babyProfile;
-                    }
-                )
+                .map(babyProfile -> {
+                    babyProfile.main(false);
+                    return babyProfile;
+                })
                 .collect(Collectors.toList())
         );
     }
