@@ -1,6 +1,7 @@
 package com.mamazinha.baby.web.rest;
 
 import com.mamazinha.baby.repository.HumorRepository;
+import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.service.HumorService;
 import com.mamazinha.baby.service.dto.HumorDTO;
 import com.mamazinha.baby.web.rest.errors.BadRequestAlertException;
@@ -17,9 +18,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
@@ -56,6 +65,7 @@ public class HumorResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/humors")
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<HumorDTO> createHumor(@Valid @RequestBody HumorDTO humorDTO) throws URISyntaxException {
         log.debug("REST request to save Humor : {}", humorDTO);
         if (humorDTO.getId() != null) {
@@ -79,6 +89,7 @@ public class HumorResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/humors/{id}")
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<HumorDTO> updateHumor(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody HumorDTO humorDTO
@@ -114,6 +125,7 @@ public class HumorResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/humors/{id}", consumes = { "application/json", "application/merge-patch+json" })
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<HumorDTO> partialUpdateHumor(
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody HumorDTO humorDTO
@@ -159,6 +171,7 @@ public class HumorResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the humorDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/humors/{id}")
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<HumorDTO> getHumor(@PathVariable Long id) {
         log.debug("REST request to get Humor : {}", id);
         Optional<HumorDTO> humorDTO = humorService.findOne(id);
@@ -172,6 +185,7 @@ public class HumorResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/humors/{id}")
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Void> deleteHumor(@PathVariable Long id) {
         log.debug("REST request to delete Humor : {}", id);
         humorService.delete(id);
