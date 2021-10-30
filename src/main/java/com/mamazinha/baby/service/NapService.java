@@ -171,25 +171,18 @@ public class NapService {
             tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
         }
 
-        List<Nap> napList = napRepository.findByBabyProfileIdAndStartGreaterThanEqualAndEndLessThan(id, todayMidnight, tomorrowMidnight);
+        List<Nap> napList = napRepository.findByBabyProfileIdAndStartGreaterThanEqualAndEndLessThanAndHumorNotNull(
+            id,
+            todayMidnight,
+            tomorrowMidnight
+        );
 
         if (napList.isEmpty()) {
             return null;
         }
         return new HumorAverageDTO()
             .dayOfWeek(nowLocalDate.getDayOfWeek().getValue())
-            .humorAverage(
-                napList
-                    .stream()
-                    .mapToInt(nap -> {
-                        if (nap.getHumor() != null && nap.getHumor().getValue() != null) {
-                            return nap.getHumor().getValue();
-                        }
-                        return 0;
-                    })
-                    .sum() /
-                napList.size()
-            );
+            .humorAverage(napList.stream().mapToInt(nap -> nap.getHumor().getValue()).sum() / napList.size());
     }
 
     private void verifyAuthorizedOperation(Long id) {

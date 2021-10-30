@@ -611,6 +611,39 @@ class NapResourceIT {
     @ParameterizedTest
     @CsvSource({ "false", "true" })
     @Transactional
+    void shouldNotReturnAverageNapHumorWhenNapHumorIsNull(boolean withTimeZone) throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        int year = 2021;
+        int month = 10;
+        int day = 23;
+        createValidAndInvalidNapsByDate(year, month, day, babyProfile);
+        // when
+        URI uri;
+        if (withTimeZone) {
+            String timeZone = "America/Sao_Paulo";
+            mockClockFixed(year, month, day, 16, 30, 00, timeZone);
+            uri = new URI(ENTITY_API_URL + "/today-average-nap-humor-by-baby-profile/" + babyProfile.getId() + "?tz=" + timeZone);
+        } else {
+            mockClockFixed(year, month, day, 16, 30, 00, null);
+            uri = new URI(ENTITY_API_URL + "/today-average-nap-humor-by-baby-profile/" + babyProfile.getId());
+        }
+        restNapMockMvc
+            .perform(
+                get(uri)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.dayOfWeek").doesNotExist())
+            .andExpect(jsonPath("$.humorAverage").doesNotExist())
+            .andDo(MockMvcResultHandlers.print());
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "false", "true" })
+    @Transactional
     void shouldReturnFavoriteNapPlaceFromTheLast30DaysByBabyProfile(boolean withTimeZone) throws Exception {
         // given
         BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
