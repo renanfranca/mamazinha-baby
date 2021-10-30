@@ -212,3 +212,6 @@ jhipster:
 # ===================================================================
 
 # application:
+logging:
+  file:
+    name: target/baby-log
