@@ -264,7 +264,10 @@ class BabyProfileResourceIT {
 
         // Get the babyProfile
         restBabyProfileMockMvc
-            .perform(get(ENTITY_API_URL_ID, babyProfile.getId()))
+            .perform(
+                get(ENTITY_API_URL_ID, babyProfile.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(babyProfile.getId().intValue()))
@@ -411,6 +414,7 @@ class BabyProfileResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedBabyProfile.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(partialUpdatedBabyProfile))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -453,6 +457,7 @@ class BabyProfileResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedBabyProfile.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(partialUpdatedBabyProfile))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 

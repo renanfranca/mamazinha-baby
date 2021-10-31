@@ -74,10 +74,10 @@ public class BabyProfileService {
      */
     public Optional<BabyProfileDTO> partialUpdate(BabyProfileDTO babyProfileDTO) {
         log.debug("Request to partially update BabyProfile : {}", babyProfileDTO);
-
         return babyProfileRepository
             .findById(babyProfileDTO.getId())
             .map(existingBabyProfile -> {
+                verifyAuthorizedOperation(existingBabyProfile.getUserId());
                 babyProfileMapper.partialUpdate(existingBabyProfile, babyProfileDTO);
 
                 return existingBabyProfile;
@@ -114,7 +114,11 @@ public class BabyProfileService {
     @Transactional(readOnly = true)
     public Optional<BabyProfileDTO> findOne(Long id) {
         log.debug("Request to get BabyProfile : {}", id);
-        return babyProfileRepository.findById(id).map(babyProfileMapper::toDto);
+        Optional<BabyProfileDTO> babyProfileOptional = babyProfileRepository.findById(id).map(babyProfileMapper::toDto);
+        if (babyProfileOptional.isPresent()) {
+            verifyAuthorizedOperation(babyProfileOptional.get().getUserId());
+        }
+        return babyProfileOptional;
     }
 
     /**
@@ -125,6 +129,24 @@ public class BabyProfileService {
     public void delete(Long id) {
         log.debug("Request to delete BabyProfile : {}", id);
         babyProfileRepository.deleteById(id);
+    }
+
+    public void verifyBabyProfileOwner(BabyProfileDTO babyProfileDTO) {
+        verifyBabyProfileOwner(babyProfileDTO == null ? null : babyProfileDTO.getId());
+    }
+
+    public void verifyBabyProfileOwner(BabyProfile babyProfile) {
+        verifyBabyProfileOwner(babyProfile == null ? null : babyProfile.getId());
+    }
+
+    public void verifyBabyProfileOwner(Long babyProfileId) {
+        if (babyProfileId == null) {
+            throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
+        }
+        Optional<BabyProfileDTO> babyProfileOptional = babyProfileRepository.findById(babyProfileId).map(babyProfileMapper::toDto);
+        if (babyProfileOptional.isPresent()) {
+            verifyAuthorizedOperation(babyProfileOptional.get().getUserId());
+        }
     }
 
     private void updateOthersBabyProfileFromSameUserToMainFalse(String userId, Long id) {
@@ -138,5 +160,14 @@ public class BabyProfileService {
                 })
                 .collect(Collectors.toList())
         );
+    }
+
+    private void verifyAuthorizedOperation(String id) {
+        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            String userId = SecurityUtils.getCurrentUserId().orElse("");
+            if (!userId.equalsIgnoreCase(id)) {
+                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
+            }
+        }
     }
 }

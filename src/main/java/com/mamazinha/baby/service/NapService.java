@@ -49,10 +49,13 @@ public class NapService {
 
     private final Clock clock;
 
-    public NapService(NapRepository napRepository, NapMapper napMapper, Clock clock) {
+    private final BabyProfileService babyProfileService;
+
+    public NapService(NapRepository napRepository, NapMapper napMapper, Clock clock, BabyProfileService babyProfileService) {
         this.napRepository = napRepository;
         this.napMapper = napMapper;
         this.clock = clock;
+        this.babyProfileService = babyProfileService;
     }
 
     /**
@@ -63,6 +66,7 @@ public class NapService {
      */
     public NapDTO save(NapDTO napDTO) {
         log.debug("Request to save Nap : {}", napDTO);
+        babyProfileService.verifyBabyProfileOwner(napDTO.getBabyProfile());
         Nap nap = napMapper.toEntity(napDTO);
         nap = napRepository.save(nap);
         return napMapper.toDto(nap);
@@ -76,10 +80,10 @@ public class NapService {
      */
     public Optional<NapDTO> partialUpdate(NapDTO napDTO) {
         log.debug("Request to partially update Nap : {}", napDTO);
-
         return napRepository
             .findById(napDTO.getId())
             .map(existingNap -> {
+                babyProfileService.verifyBabyProfileOwner(existingNap.getBabyProfile());
                 napMapper.partialUpdate(existingNap, napDTO);
 
                 return existingNap;
@@ -116,12 +120,16 @@ public class NapService {
     @Transactional(readOnly = true)
     public Optional<NapDTO> findOne(Long id) {
         log.debug("Request to get Nap : {}", id);
-        return napRepository.findById(id).map(napMapper::toDto);
+        Optional<NapDTO> napDTOOptional = napRepository.findById(id).map(napMapper::toDto);
+        if (napDTOOptional.isPresent()) {
+            babyProfileService.verifyBabyProfileOwner(napDTOOptional.get().getBabyProfile());
+        }
+        return napDTOOptional;
     }
 
     @Transactional(readOnly = true)
     public NapTodayDTO getTodaySumNapsHoursByBabyProfile(Long id, String timeZone) {
-        verifyAuthorizedOperation(id);
+        babyProfileService.verifyBabyProfileOwner(id);
 
         LocalDate nowLocalDate = LocalDate.now(clock);
         if (timeZone != null) {
@@ -133,7 +141,7 @@ public class NapService {
 
     @Transactional(readOnly = true)
     public NapLastCurrentWeekDTO getLastWeekCurrentWeekSumNapsHoursEachDayByBabyProfile(Long id, String timeZone) {
-        verifyAuthorizedOperation(id);
+        babyProfileService.verifyBabyProfileOwner(id);
 
         LocalDate nowLocalDate = LocalDate.now(clock);
         if (timeZone != null) {
@@ -157,7 +165,7 @@ public class NapService {
 
     @Transactional(readOnly = true)
     public HumorAverageDTO getTodayAverageNapHumorByBabyProfile(Long id, String timeZone) {
-        verifyAuthorizedOperation(id);
+        babyProfileService.verifyBabyProfileOwner(id);
 
         LocalDate nowLocalDate = LocalDate.now(clock);
         if (timeZone != null) {
@@ -185,17 +193,8 @@ public class NapService {
             .humorAverage(napList.stream().mapToInt(nap -> nap.getHumor().getValue()).sum() / napList.size());
     }
 
-    private void verifyAuthorizedOperation(Long id) {
-        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
-            String userId = SecurityUtils.getCurrentUserId().orElse(null);
-            if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
-                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
-            }
-        }
-    }
-
     public FavoriteNapPlaceDTO getFavoriteNapPlaceFromLastDaysByBabyProfile(Long id, Integer lastDays, String timeZone) {
-        verifyAuthorizedOperation(id);
+        babyProfileService.verifyBabyProfileOwner(id);
 
         LocalDate nowLocalDate = LocalDate.now(clock);
         ZonedDateTime rightNow = ZonedDateTime.now(ZoneId.systemDefault());
@@ -231,6 +230,10 @@ public class NapService {
      */
     public void delete(Long id) {
         log.debug("Request to delete Nap : {}", id);
+        Optional<NapDTO> napDTOOptional = napRepository.findById(id).map(napMapper::toDto);
+        if (napDTOOptional.isPresent()) {
+            babyProfileService.verifyBabyProfileOwner(napDTOOptional.get().getBabyProfile());
+        }
         napRepository.deleteById(id);
     }
 
@@ -304,5 +307,14 @@ public class NapService {
                 .sum() /
             60
         );
+    }
+
+    private void verifyAuthorizedOperation(Long id) {
+        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            String userId = SecurityUtils.getCurrentUserId().orElse(null);
+            if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
+                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
+            }
+        }
     }
 }

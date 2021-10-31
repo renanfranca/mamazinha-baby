@@ -130,9 +130,15 @@ class NapResourceIT {
     void createNap() throws Exception {
         int databaseSizeBeforeCreate = napRepository.findAll().size();
         // Create the Nap
-        NapDTO napDTO = napMapper.toDto(nap);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        NapDTO napDTO = napMapper.toDto(nap.babyProfile(babyProfile));
         restNapMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(napDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(napDTO))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
             .andExpect(status().isCreated());
 
         // Validate the Nap in the database
@@ -184,11 +190,15 @@ class NapResourceIT {
     @Transactional
     void getNap() throws Exception {
         // Initialize the database
-        napRepository.saveAndFlush(nap);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        napRepository.saveAndFlush(nap.babyProfile(babyProfile));
 
         // Get the nap
         restNapMockMvc
-            .perform(get(ENTITY_API_URL_ID, nap.getId()))
+            .perform(
+                get(ENTITY_API_URL_ID, nap.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(nap.getId().intValue()))
@@ -208,7 +218,8 @@ class NapResourceIT {
     @Transactional
     void putNewNap() throws Exception {
         // Initialize the database
-        napRepository.saveAndFlush(nap);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        napRepository.saveAndFlush(nap.babyProfile(babyProfile));
 
         int databaseSizeBeforeUpdate = napRepository.findAll().size();
 
@@ -224,6 +235,7 @@ class NapResourceIT {
                 put(ENTITY_API_URL_ID, napDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(TestUtil.convertObjectToJsonBytes(napDTO))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -305,7 +317,8 @@ class NapResourceIT {
     @Transactional
     void partialUpdateNapWithPatch() throws Exception {
         // Initialize the database
-        napRepository.saveAndFlush(nap);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        napRepository.saveAndFlush(nap.babyProfile(babyProfile));
 
         int databaseSizeBeforeUpdate = napRepository.findAll().size();
 
@@ -320,6 +333,7 @@ class NapResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedNap.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(partialUpdatedNap))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -336,7 +350,8 @@ class NapResourceIT {
     @Transactional
     void fullUpdateNapWithPatch() throws Exception {
         // Initialize the database
-        napRepository.saveAndFlush(nap);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        napRepository.saveAndFlush(nap.babyProfile(babyProfile));
 
         int databaseSizeBeforeUpdate = napRepository.findAll().size();
 
@@ -351,6 +366,7 @@ class NapResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedNap.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(partialUpdatedNap))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -432,12 +448,19 @@ class NapResourceIT {
     @Transactional
     void deleteNap() throws Exception {
         // Initialize the database
-        napRepository.saveAndFlush(nap);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        napRepository.saveAndFlush(nap.babyProfile(babyProfile));
 
         int databaseSizeBeforeDelete = napRepository.findAll().size();
 
         // Delete the nap
-        restNapMockMvc.perform(delete(ENTITY_API_URL_ID, nap.getId()).accept(MediaType.APPLICATION_JSON)).andExpect(status().isNoContent());
+        restNapMockMvc
+            .perform(
+                delete(ENTITY_API_URL_ID, nap.getId())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
         List<Nap> napList = napRepository.findAll();
@@ -474,9 +497,17 @@ class NapResourceIT {
             .andExpect(jsonPath("$.sleepHoursGoal").value(16));
     }
 
-    @Test
+    @ParameterizedTest
+    @CsvSource(
+        {
+            "today-sum-naps-in-hours-by-baby-profile, ",
+            "lastweek-currentweek-sum-naps-in-hours-eachday-by-baby-profile, ",
+            "today-average-nap-humor-by-baby-profile, ",
+            "favorite-nap-place-from-last-days-by-baby-profile,?lastDays=30",
+        }
+    )
     @Transactional
-    void shouldThrowAccessDeniedExceptionWhenSumNapsInHoursOfToday() throws Exception {
+    void shouldThrowAccessDeniedExceptionWhenUserIsNotTheTheBabyProfileIdOwner(String endPointUrl, String parameter) throws Exception {
         // given
         mockClockFixed(2021, 9, 20, 16, 30, 00, null);
 
@@ -490,8 +521,8 @@ class NapResourceIT {
         // when
         restNapMockMvc
             .perform(
-                get(ENTITY_API_URL + "/today-sum-naps-in-hours-by-baby-profile/{id}", babyProfile.getId())
-                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", "22222222", "ROLE_USER")))
+                get(ENTITY_API_URL + "/" + endPointUrl + "/{id}" + (parameter == null ? "" : parameter), babyProfile.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", "another userId value", "ROLE_USER")))
             )
             // then
             .andExpect(status().isForbidden());
