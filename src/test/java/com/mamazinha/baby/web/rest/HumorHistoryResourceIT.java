@@ -124,10 +124,14 @@ class HumorHistoryResourceIT {
     void createHumorHistory() throws Exception {
         int databaseSizeBeforeCreate = humorHistoryRepository.findAll().size();
         // Create the HumorHistory
-        HumorHistoryDTO humorHistoryDTO = humorHistoryMapper.toDto(humorHistory);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        HumorHistoryDTO humorHistoryDTO = humorHistoryMapper.toDto(humorHistory.babyProfile(babyProfile));
         restHumorHistoryMockMvc
             .perform(
-                post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(humorHistoryDTO))
+                post(ENTITY_API_URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(humorHistoryDTO))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isCreated());
 
@@ -198,11 +202,15 @@ class HumorHistoryResourceIT {
     @Transactional
     void getHumorHistory() throws Exception {
         // Initialize the database
-        humorHistoryRepository.saveAndFlush(humorHistory);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        humorHistoryRepository.saveAndFlush(humorHistory.babyProfile(babyProfile));
 
         // Get the humorHistory
         restHumorHistoryMockMvc
-            .perform(get(ENTITY_API_URL_ID, humorHistory.getId()))
+            .perform(
+                get(ENTITY_API_URL_ID, humorHistory.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(humorHistory.getId().intValue()))
@@ -220,7 +228,8 @@ class HumorHistoryResourceIT {
     @Transactional
     void putNewHumorHistory() throws Exception {
         // Initialize the database
-        humorHistoryRepository.saveAndFlush(humorHistory);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        humorHistoryRepository.saveAndFlush(humorHistory.babyProfile(babyProfile));
 
         int databaseSizeBeforeUpdate = humorHistoryRepository.findAll().size();
 
@@ -236,6 +245,7 @@ class HumorHistoryResourceIT {
                 put(ENTITY_API_URL_ID, humorHistoryDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(TestUtil.convertObjectToJsonBytes(humorHistoryDTO))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -317,7 +327,8 @@ class HumorHistoryResourceIT {
     @Transactional
     void partialUpdateHumorHistoryWithPatch() throws Exception {
         // Initialize the database
-        humorHistoryRepository.saveAndFlush(humorHistory);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        humorHistoryRepository.saveAndFlush(humorHistory.babyProfile(babyProfile));
 
         int databaseSizeBeforeUpdate = humorHistoryRepository.findAll().size();
 
@@ -330,6 +341,7 @@ class HumorHistoryResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedHumorHistory.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(partialUpdatedHumorHistory))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -344,7 +356,8 @@ class HumorHistoryResourceIT {
     @Transactional
     void fullUpdateHumorHistoryWithPatch() throws Exception {
         // Initialize the database
-        humorHistoryRepository.saveAndFlush(humorHistory);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        humorHistoryRepository.saveAndFlush(humorHistory.babyProfile(babyProfile));
 
         int databaseSizeBeforeUpdate = humorHistoryRepository.findAll().size();
 
@@ -359,6 +372,7 @@ class HumorHistoryResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedHumorHistory.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(partialUpdatedHumorHistory))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -442,13 +456,18 @@ class HumorHistoryResourceIT {
     @Transactional
     void deleteHumorHistory() throws Exception {
         // Initialize the database
-        humorHistoryRepository.saveAndFlush(humorHistory);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        humorHistoryRepository.saveAndFlush(humorHistory.babyProfile(babyProfile));
 
         int databaseSizeBeforeDelete = humorHistoryRepository.findAll().size();
 
         // Delete the humorHistory
         restHumorHistoryMockMvc
-            .perform(delete(ENTITY_API_URL_ID, humorHistory.getId()).accept(MediaType.APPLICATION_JSON))
+            .perform(
+                delete(ENTITY_API_URL_ID, humorHistory.getId())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
             .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
@@ -530,6 +549,24 @@ class HumorHistoryResourceIT {
             .andExpect(jsonPath("$.dayOfWeek").value(7))
             .andExpect(jsonPath("$.humorAverage").value(3))
             .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    @Transactional
+    void shouldThrowAccessDeniedExceptionWhenUserIsNotTheTheBabyProfileIdOwner() throws Exception {
+        // given
+        mockClockFixed(2021, 9, 20, 16, 30, 00, null);
+
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        humorHistoryRepository.saveAndFlush(humorHistory.babyProfile(babyProfile));
+        // when
+        restHumorHistoryMockMvc
+            .perform(
+                get(ENTITY_API_URL + "/today-average-humor-history-by-baby-profile/{id}", babyProfile.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", "another userId value", "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isForbidden());
     }
 
     private void mockClockFixed(Integer year, Integer month, Integer day, Integer hour, Integer minute, Integer second, String timeZone) {

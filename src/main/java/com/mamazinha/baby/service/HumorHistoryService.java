@@ -1,6 +1,5 @@
 package com.mamazinha.baby.service;
 
-import com.mamazinha.baby.config.Constants;
 import com.mamazinha.baby.domain.HumorHistory;
 import com.mamazinha.baby.repository.HumorHistoryRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
@@ -18,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,10 +35,18 @@ public class HumorHistoryService {
 
     private final Clock clock;
 
-    public HumorHistoryService(HumorHistoryRepository humorHistoryRepository, HumorHistoryMapper humorHistoryMapper, Clock clock) {
+    private final BabyProfileService babyProfileService;
+
+    public HumorHistoryService(
+        HumorHistoryRepository humorHistoryRepository,
+        HumorHistoryMapper humorHistoryMapper,
+        Clock clock,
+        BabyProfileService babyProfileService
+    ) {
         this.humorHistoryRepository = humorHistoryRepository;
         this.humorHistoryMapper = humorHistoryMapper;
         this.clock = clock;
+        this.babyProfileService = babyProfileService;
     }
 
     /**
@@ -51,6 +57,7 @@ public class HumorHistoryService {
      */
     public HumorHistoryDTO save(HumorHistoryDTO humorHistoryDTO) {
         log.debug("Request to save HumorHistory : {}", humorHistoryDTO);
+        babyProfileService.verifyBabyProfileOwner(humorHistoryDTO.getBabyProfile());
         HumorHistory humorHistory = humorHistoryMapper.toEntity(humorHistoryDTO);
         humorHistory = humorHistoryRepository.save(humorHistory);
         return humorHistoryMapper.toDto(humorHistory);
@@ -68,6 +75,7 @@ public class HumorHistoryService {
         return humorHistoryRepository
             .findById(humorHistoryDTO.getId())
             .map(existingHumorHistory -> {
+                babyProfileService.verifyBabyProfileOwner(existingHumorHistory.getBabyProfile());
                 humorHistoryMapper.partialUpdate(existingHumorHistory, humorHistoryDTO);
 
                 return existingHumorHistory;
@@ -104,20 +112,16 @@ public class HumorHistoryService {
     @Transactional(readOnly = true)
     public Optional<HumorHistoryDTO> findOne(Long id) {
         log.debug("Request to get HumorHistory : {}", id);
-        return humorHistoryRepository.findById(id).map(humorHistoryMapper::toDto);
+        Optional<HumorHistoryDTO> humorHistoryDTOOptional = humorHistoryRepository.findById(id).map(humorHistoryMapper::toDto);
+        if (humorHistoryDTOOptional.isPresent()) {
+            babyProfileService.verifyBabyProfileOwner(humorHistoryDTOOptional.get().getBabyProfile());
+        }
+        return humorHistoryDTOOptional;
     }
 
     @Transactional(readOnly = true)
     public HumorAverageDTO getTodayAverageHumorHistoryByBabyProfile(Long id, String timeZone) {
-        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
-            String userId = SecurityUtils.getCurrentUserId().orElse(null);
-            if (
-                humorHistoryRepository.existsByBabyProfileId(id) &&
-                !humorHistoryRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)
-            ) {
-                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
-            }
-        }
+        babyProfileService.verifyBabyProfileOwner(id);
 
         LocalDate nowLocalDate = LocalDate.now(clock);
         if (timeZone != null) {
@@ -131,7 +135,7 @@ public class HumorHistoryService {
             tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
         }
 
-        List<HumorHistory> humorHistoryList = humorHistoryRepository.findByBabyProfileIdAndDateGreaterThanEqualAndDateLessThan(
+        List<HumorHistory> humorHistoryList = humorHistoryRepository.findByBabyProfileIdAndDateGreaterThanEqualAndDateLessThanAndHumorNotNull(
             id,
             todayMidnight,
             tomorrowMidnight
@@ -143,16 +147,7 @@ public class HumorHistoryService {
         return new HumorAverageDTO()
             .dayOfWeek(nowLocalDate.getDayOfWeek().getValue())
             .humorAverage(
-                humorHistoryList
-                    .stream()
-                    .mapToInt(humorHistory -> {
-                        if (humorHistory.getHumor() != null && humorHistory.getHumor().getValue() != null) {
-                            return humorHistory.getHumor().getValue();
-                        }
-                        return 0;
-                    })
-                    .sum() /
-                humorHistoryList.size()
+                humorHistoryList.stream().mapToInt(humorHistory -> humorHistory.getHumor().getValue()).sum() / humorHistoryList.size()
             );
     }
 
@@ -163,6 +158,10 @@ public class HumorHistoryService {
      */
     public void delete(Long id) {
         log.debug("Request to delete HumorHistory : {}", id);
+        Optional<HumorHistoryDTO> humorHistoryDTOOptional = humorHistoryRepository.findById(id).map(humorHistoryMapper::toDto);
+        if (humorHistoryDTOOptional.isPresent()) {
+            babyProfileService.verifyBabyProfileOwner(humorHistoryDTOOptional.get().getBabyProfile());
+        }
         humorHistoryRepository.deleteById(id);
     }
 }

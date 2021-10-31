@@ -18,7 +18,7 @@ public interface HumorHistoryRepository extends JpaRepository<HumorHistory, Long
 
     boolean existsByBabyProfileIdAndBabyProfileUserId(Long id, String userId);
 
-    List<HumorHistory> findByBabyProfileIdAndDateGreaterThanEqualAndDateLessThan(
+    List<HumorHistory> findByBabyProfileIdAndDateGreaterThanEqualAndDateLessThanAndHumorNotNull(
         Long id,
         ZonedDateTime todayMidnight,
         ZonedDateTime tomorrowMidnight
