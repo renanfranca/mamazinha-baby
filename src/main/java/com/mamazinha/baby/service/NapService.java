@@ -203,16 +203,13 @@ public class NapService {
             daysAgo = ZonedDateTime.of(nowLocalDate.minusDays(lastDays).atStartOfDay(), ZoneId.of(timeZone));
         }
 
-        List<Nap> napList = napRepository.findByBabyProfileIdAndStartGreaterThanEqualAndEndLessThan(id, daysAgo, rightNow);
+        List<Nap> napList = napRepository.findByBabyProfileIdAndStartGreaterThanEqualAndEndLessThanAndPlaceNotNull(id, daysAgo, rightNow);
 
         if (napList.isEmpty()) {
             return new FavoriteNapPlaceDTO().periodInDays(lastDays);
         }
         //https://stackoverflow.com/a/47844261/1184154
-        Map<Place, Long> groupByPlaceMap = napList
-            .stream()
-            .filter(nap -> nap.getPlace() != null)
-            .collect(Collectors.groupingBy(Nap::getPlace, Collectors.counting()));
+        Map<Place, Long> groupByPlaceMap = napList.stream().collect(Collectors.groupingBy(Nap::getPlace, Collectors.counting()));
         //https://www.baeldung.com/java-find-map-max
         Optional<Entry<Place, Long>> maxPlaceEntry = groupByPlaceMap.entrySet().stream().max(Comparator.comparing(Map.Entry::getValue));
         return new FavoriteNapPlaceDTO()

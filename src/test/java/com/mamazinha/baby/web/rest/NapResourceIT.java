@@ -720,6 +720,60 @@ class NapResourceIT {
             .andExpect(jsonPath("$.amountOfTimes").value(3));
     }
 
+    @ParameterizedTest
+    @CsvSource({ "false", "true" })
+    @Transactional
+    void shouldNotReturnFavoriteNapPlaceFromTheLast30DaysByBabyProfileWhenPlaceIsNull(boolean withTimeZone) throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        int year = 2021;
+        int month = 10;
+        int day = 25;
+
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day - 1, 23, 30, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 0, 30, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .place(null)
+        );
+        Integer lastDays = 30;
+        // when
+        URI uri;
+        if (withTimeZone) {
+            String timeZone = "America/Sao_Paulo";
+            mockClockFixed(year, month, day, 16, 30, 00, timeZone);
+            uri =
+                new URI(
+                    ENTITY_API_URL +
+                    "/favorite-nap-place-from-last-days-by-baby-profile/" +
+                    babyProfile.getId() +
+                    "?lastDays=" +
+                    lastDays +
+                    "&tz=" +
+                    timeZone
+                );
+        } else {
+            mockClockFixed(year, month, day, 16, 30, 00, null);
+            uri =
+                new URI(
+                    ENTITY_API_URL + "/favorite-nap-place-from-last-days-by-baby-profile/" + babyProfile.getId() + "?lastDays=" + lastDays
+                );
+        }
+        restNapMockMvc
+            .perform(
+                get(uri)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.periodInDays").value(30))
+            .andExpect(jsonPath("$.favoritePlace").doesNotExist())
+            .andExpect(jsonPath("$.amountOfTimes").doesNotExist());
+    }
+
     private void createValidAndInvalidNapsByDate(Integer year, Integer month, Integer day, BabyProfile babyProfile) {
         // valid
         napRepository.saveAndFlush(
