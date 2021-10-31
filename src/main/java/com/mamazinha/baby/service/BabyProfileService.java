@@ -141,11 +141,12 @@ public class BabyProfileService {
 
     public void verifyBabyProfileOwner(Long babyProfileId) {
         if (babyProfileId == null) {
-            throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
-        }
-        Optional<BabyProfileDTO> babyProfileOptional = babyProfileRepository.findById(babyProfileId).map(babyProfileMapper::toDto);
-        if (babyProfileOptional.isPresent()) {
-            verifyAuthorizedOperation(babyProfileOptional.get().getUserId());
+            verifyAuthorizedOperation(null);
+        } else {
+            Optional<BabyProfileDTO> babyProfileOptional = babyProfileRepository.findById(babyProfileId).map(babyProfileMapper::toDto);
+            if (babyProfileOptional.isPresent()) {
+                verifyAuthorizedOperation(babyProfileOptional.get().getUserId());
+            }
         }
     }
 
