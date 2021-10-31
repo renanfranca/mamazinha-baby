@@ -15,9 +15,5 @@ import org.springframework.stereotype.Repository;
 public interface HeightRepository extends JpaRepository<Height, Long> {
     Page<Height> findByBabyProfileUserId(Pageable pageable, String string);
 
-    boolean existsByBabyProfileId(Long id);
-
-    boolean existsByBabyProfileIdAndBabyProfileUserId(Long id, String userId);
-
     Optional<Height> findFirstByBabyProfileIdOrderByDateDesc(Long id);
 }

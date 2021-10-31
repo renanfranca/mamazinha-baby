@@ -118,9 +118,15 @@ class HeightResourceIT {
     void createHeight() throws Exception {
         int databaseSizeBeforeCreate = heightRepository.findAll().size();
         // Create the Height
-        HeightDTO heightDTO = heightMapper.toDto(height);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        HeightDTO heightDTO = heightMapper.toDto(height.babyProfile(babyProfile));
         restHeightMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(heightDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(heightDTO))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
             .andExpect(status().isCreated());
 
         // Validate the Height in the database
@@ -281,11 +287,15 @@ class HeightResourceIT {
     @Transactional
     void getHeight() throws Exception {
         // Initialize the database
-        heightRepository.saveAndFlush(height);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        heightRepository.saveAndFlush(height.babyProfile(babyProfile));
 
         // Get the height
         restHeightMockMvc
-            .perform(get(ENTITY_API_URL_ID, height.getId()))
+            .perform(
+                get(ENTITY_API_URL_ID, height.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(height.getId().intValue()))
@@ -304,7 +314,8 @@ class HeightResourceIT {
     @Transactional
     void putNewHeight() throws Exception {
         // Initialize the database
-        heightRepository.saveAndFlush(height);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        heightRepository.saveAndFlush(height.babyProfile(babyProfile));
 
         int databaseSizeBeforeUpdate = heightRepository.findAll().size();
 
@@ -320,6 +331,7 @@ class HeightResourceIT {
                 put(ENTITY_API_URL_ID, heightDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(TestUtil.convertObjectToJsonBytes(heightDTO))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -400,7 +412,8 @@ class HeightResourceIT {
     @Transactional
     void partialUpdateHeightWithPatch() throws Exception {
         // Initialize the database
-        heightRepository.saveAndFlush(height);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        heightRepository.saveAndFlush(height.babyProfile(babyProfile));
 
         int databaseSizeBeforeUpdate = heightRepository.findAll().size();
 
@@ -413,6 +426,7 @@ class HeightResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedHeight.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(partialUpdatedHeight))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -428,7 +442,8 @@ class HeightResourceIT {
     @Transactional
     void fullUpdateHeightWithPatch() throws Exception {
         // Initialize the database
-        heightRepository.saveAndFlush(height);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        heightRepository.saveAndFlush(height.babyProfile(babyProfile));
 
         int databaseSizeBeforeUpdate = heightRepository.findAll().size();
 
@@ -443,6 +458,7 @@ class HeightResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedHeight.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(partialUpdatedHeight))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -525,13 +541,18 @@ class HeightResourceIT {
     @Transactional
     void deleteHeight() throws Exception {
         // Initialize the database
-        heightRepository.saveAndFlush(height);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        heightRepository.saveAndFlush(height.babyProfile(babyProfile));
 
         int databaseSizeBeforeDelete = heightRepository.findAll().size();
 
         // Delete the height
         restHeightMockMvc
-            .perform(delete(ENTITY_API_URL_ID, height.getId()).accept(MediaType.APPLICATION_JSON))
+            .perform(
+                delete(ENTITY_API_URL_ID, height.getId())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
             .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
