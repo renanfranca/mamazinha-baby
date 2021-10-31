@@ -1,6 +1,5 @@
 package com.mamazinha.baby.service;
 
-import com.mamazinha.baby.config.Constants;
 import com.mamazinha.baby.domain.Nap;
 import com.mamazinha.baby.domain.enumeration.Place;
 import com.mamazinha.baby.repository.NapRepository;
@@ -30,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -307,14 +305,5 @@ public class NapService {
                 .sum() /
             60
         );
-    }
-
-    private void verifyAuthorizedOperation(Long id) {
-        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
-            String userId = SecurityUtils.getCurrentUserId().orElse(null);
-            if (napRepository.existsByBabyProfileId(id) && !napRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
-                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
-            }
-        }
     }
 }

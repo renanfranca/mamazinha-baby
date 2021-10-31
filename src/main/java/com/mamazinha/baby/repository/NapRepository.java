@@ -11,14 +11,10 @@ import org.springframework.stereotype.Repository;
 /**
  * Spring Data SQL repository for the Nap entity.
  */
-@SuppressWarnings("unused")
+// @SuppressWarnings("unused")
 @Repository
 public interface NapRepository extends JpaRepository<Nap, Long> {
     Page<Nap> findByBabyProfileUserId(Pageable pageable, String string);
-
-    boolean existsByBabyProfileId(Long id);
-
-    boolean existsByBabyProfileIdAndBabyProfileUserId(Long id, String string);
 
     List<Nap> findByBabyProfileIdAndStartBetweenOrEndBetween(
         Long id,
