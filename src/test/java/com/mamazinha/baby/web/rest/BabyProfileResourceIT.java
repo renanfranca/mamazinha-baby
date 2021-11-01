@@ -314,6 +314,7 @@ class BabyProfileResourceIT {
                 put(ENTITY_API_URL_ID, babyProfileDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(TestUtil.convertObjectToJsonBytes(babyProfileDTO))
+                    .with(user("admin").roles("ADMIN"))
             )
             .andExpect(status().isOk());
 
@@ -328,6 +329,50 @@ class BabyProfileResourceIT {
         assertThat(testBabyProfile.getSign()).isEqualTo(UPDATED_SIGN);
         assertThat(testBabyProfile.getMain()).isEqualTo(UPDATED_MAIN);
         assertThat(testBabyProfile.getUserId()).isEqualTo(UPDATED_USER_ID);
+    }
+
+    @Test
+    @Transactional
+    void putNewBabyProfileWithUserRole() throws Exception {
+        // Initialize the database
+        babyProfileRepository.saveAndFlush(babyProfile);
+
+        int databaseSizeBeforeUpdate = babyProfileRepository.findAll().size();
+
+        // Update the babyProfile
+        BabyProfile updatedBabyProfile = babyProfileRepository.findById(babyProfile.getId()).get();
+        // Disconnect from session so that the updates on updatedBabyProfile are not directly saved in db
+        em.detach(updatedBabyProfile);
+        updatedBabyProfile
+            .name(UPDATED_NAME)
+            .picture(UPDATED_PICTURE)
+            .pictureContentType(UPDATED_PICTURE_CONTENT_TYPE)
+            .birthday(UPDATED_BIRTHDAY)
+            .sign(UPDATED_SIGN)
+            .main(UPDATED_MAIN)
+            .userId(UPDATED_USER_ID);
+        BabyProfileDTO babyProfileDTO = babyProfileMapper.toDto(updatedBabyProfile);
+
+        restBabyProfileMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, babyProfileDTO.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(babyProfileDTO))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", DEFAULT_USER_ID, "ROLE_USER")))
+            )
+            .andExpect(status().isOk());
+
+        // Validate the BabyProfile in the database
+        List<BabyProfile> babyProfileList = babyProfileRepository.findAll();
+        assertThat(babyProfileList).hasSize(databaseSizeBeforeUpdate);
+        BabyProfile testBabyProfile = babyProfileList.get(babyProfileList.size() - 1);
+        assertThat(testBabyProfile.getName()).isEqualTo(UPDATED_NAME);
+        assertThat(testBabyProfile.getPicture()).isEqualTo(UPDATED_PICTURE);
+        assertThat(testBabyProfile.getPictureContentType()).isEqualTo(UPDATED_PICTURE_CONTENT_TYPE);
+        assertThat(testBabyProfile.getBirthday()).isEqualTo(UPDATED_BIRTHDAY);
+        assertThat(testBabyProfile.getSign()).isEqualTo(UPDATED_SIGN);
+        assertThat(testBabyProfile.getMain()).isEqualTo(UPDATED_MAIN);
+        assertThat(testBabyProfile.getUserId()).isEqualTo(DEFAULT_USER_ID);
     }
 
     @Test

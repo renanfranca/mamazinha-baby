@@ -52,7 +52,8 @@ public class BabyProfileService {
             if (userId.isPresent()) {
                 if (
                     babyProfileRepository.findByUserId(Pageable.unpaged(), userId.get()).getTotalElements() >=
-                    MAX_BABY_PROFILE_ALLOWED_FOR_USER_ROLE_AUTHORITY
+                    MAX_BABY_PROFILE_ALLOWED_FOR_USER_ROLE_AUTHORITY &&
+                    babyProfileDTO.getId() == null
                 ) {
                     throw new AccessDeniedException(Constants.REACH_MAX_BABY_PROFILE_ALLOWED_FOR_USER_ROLE_AUTHORITY);
                 }
