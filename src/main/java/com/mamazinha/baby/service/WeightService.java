@@ -1,6 +1,5 @@
 package com.mamazinha.baby.service;
 
-import com.mamazinha.baby.config.Constants;
 import com.mamazinha.baby.domain.Weight;
 import com.mamazinha.baby.repository.WeightRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
@@ -12,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,9 +27,12 @@ public class WeightService {
 
     private final WeightMapper weightMapper;
 
-    public WeightService(WeightRepository weightRepository, WeightMapper weightMapper) {
+    private final BabyProfileService babyProfileService;
+
+    public WeightService(WeightRepository weightRepository, WeightMapper weightMapper, BabyProfileService babyProfileService) {
         this.weightRepository = weightRepository;
         this.weightMapper = weightMapper;
+        this.babyProfileService = babyProfileService;
     }
 
     /**
@@ -42,6 +43,7 @@ public class WeightService {
      */
     public WeightDTO save(WeightDTO weightDTO) {
         log.debug("Request to save Weight : {}", weightDTO);
+        babyProfileService.verifyBabyProfileOwner(weightDTO.getBabyProfile());
         Weight weight = weightMapper.toEntity(weightDTO);
         weight = weightRepository.save(weight);
         return weightMapper.toDto(weight);
@@ -59,6 +61,7 @@ public class WeightService {
         return weightRepository
             .findById(weightDTO.getId())
             .map(existingWeight -> {
+                babyProfileService.verifyBabyProfileOwner(existingWeight.getBabyProfile());
                 weightMapper.partialUpdate(existingWeight, weightDTO);
 
                 return existingWeight;
@@ -88,7 +91,7 @@ public class WeightService {
 
     @Transactional(readOnly = true)
     public Optional<WeightDTO> findLatestByBabyProfile(Long id) {
-        verifyAuthorizedOperation(id);
+        babyProfileService.verifyBabyProfileOwner(id);
         Optional<String> userId = SecurityUtils.getCurrentUserId();
         if (userId.isPresent()) {
             return weightRepository.findFirstByBabyProfileIdOrderByDateDesc(id).map(weightMapper::toDto);
@@ -105,7 +108,11 @@ public class WeightService {
     @Transactional(readOnly = true)
     public Optional<WeightDTO> findOne(Long id) {
         log.debug("Request to get Weight : {}", id);
-        return weightRepository.findById(id).map(weightMapper::toDto);
+        Optional<WeightDTO> weightDTOOptional = weightRepository.findById(id).map(weightMapper::toDto);
+        if (weightDTOOptional.isPresent()) {
+            babyProfileService.verifyBabyProfileOwner(weightDTOOptional.get().getBabyProfile());
+        }
+        return weightDTOOptional;
     }
 
     /**
@@ -115,15 +122,10 @@ public class WeightService {
      */
     public void delete(Long id) {
         log.debug("Request to delete Weight : {}", id);
-        weightRepository.deleteById(id);
-    }
-
-    private void verifyAuthorizedOperation(Long id) {
-        if (!SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
-            String userId = SecurityUtils.getCurrentUserId().orElse(null);
-            if (weightRepository.existsByBabyProfileId(id) && !weightRepository.existsByBabyProfileIdAndBabyProfileUserId(id, userId)) {
-                throw new AccessDeniedException(Constants.THAT_IS_NOT_YOUR_BABY_PROFILE);
-            }
+        Optional<WeightDTO> weightDTOOptional = weightRepository.findById(id).map(weightMapper::toDto);
+        if (weightDTOOptional.isPresent()) {
+            babyProfileService.verifyBabyProfileOwner(weightDTOOptional.get().getBabyProfile());
         }
+        weightRepository.deleteById(id);
     }
 }

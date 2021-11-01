@@ -118,9 +118,15 @@ class WeightResourceIT {
     void createWeight() throws Exception {
         int databaseSizeBeforeCreate = weightRepository.findAll().size();
         // Create the Weight
-        WeightDTO weightDTO = weightMapper.toDto(weight);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        WeightDTO weightDTO = weightMapper.toDto(weight.babyProfile(babyProfile));
         restWeightMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(weightDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(weightDTO))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
             .andExpect(status().isCreated());
 
         // Validate the Weight in the database
@@ -281,11 +287,15 @@ class WeightResourceIT {
     @Transactional
     void getWeight() throws Exception {
         // Initialize the database
-        weightRepository.saveAndFlush(weight);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        weightRepository.saveAndFlush(weight.babyProfile(babyProfile));
 
         // Get the weight
         restWeightMockMvc
-            .perform(get(ENTITY_API_URL_ID, weight.getId()))
+            .perform(
+                get(ENTITY_API_URL_ID, weight.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(weight.getId().intValue()))
@@ -304,7 +314,8 @@ class WeightResourceIT {
     @Transactional
     void putNewWeight() throws Exception {
         // Initialize the database
-        weightRepository.saveAndFlush(weight);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        weightRepository.saveAndFlush(weight.babyProfile(babyProfile));
 
         int databaseSizeBeforeUpdate = weightRepository.findAll().size();
 
@@ -320,6 +331,7 @@ class WeightResourceIT {
                 put(ENTITY_API_URL_ID, weightDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(TestUtil.convertObjectToJsonBytes(weightDTO))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -400,7 +412,8 @@ class WeightResourceIT {
     @Transactional
     void partialUpdateWeightWithPatch() throws Exception {
         // Initialize the database
-        weightRepository.saveAndFlush(weight);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        weightRepository.saveAndFlush(weight.babyProfile(babyProfile));
 
         int databaseSizeBeforeUpdate = weightRepository.findAll().size();
 
@@ -415,6 +428,7 @@ class WeightResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedWeight.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(partialUpdatedWeight))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -430,7 +444,8 @@ class WeightResourceIT {
     @Transactional
     void fullUpdateWeightWithPatch() throws Exception {
         // Initialize the database
-        weightRepository.saveAndFlush(weight);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        weightRepository.saveAndFlush(weight.babyProfile(babyProfile));
 
         int databaseSizeBeforeUpdate = weightRepository.findAll().size();
 
@@ -445,6 +460,7 @@ class WeightResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedWeight.getId())
                     .contentType("application/merge-patch+json")
                     .content(TestUtil.convertObjectToJsonBytes(partialUpdatedWeight))
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
             )
             .andExpect(status().isOk());
 
@@ -527,13 +543,18 @@ class WeightResourceIT {
     @Transactional
     void deleteWeight() throws Exception {
         // Initialize the database
-        weightRepository.saveAndFlush(weight);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em).userId("11111111"));
+        weightRepository.saveAndFlush(weight.babyProfile(babyProfile));
 
         int databaseSizeBeforeDelete = weightRepository.findAll().size();
 
         // Delete the weight
         restWeightMockMvc
-            .perform(delete(ENTITY_API_URL_ID, weight.getId()).accept(MediaType.APPLICATION_JSON))
+            .perform(
+                delete(ENTITY_API_URL_ID, weight.getId())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
             .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
