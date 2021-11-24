@@ -1,0 +1,35 @@
+{
+  "name": "Humor",
+  "fields": [
+    {
+      "fieldName": "value",
+      "fieldType": "Integer",
+      "javadoc": "1 to 5  ANGRY, SAD, CALM, HAPPY, EXCITED",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "description",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "emotico",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "image"
+    }
+  ],
+  "relationships": [],
+  "entityTableName": "humor",
+  "dto": "mapstruct",
+  "pagination": "infinite-scroll",
+  "service": "serviceClass",
+  "jpaMetamodelFiltering": false,
+  "fluentMethods": true,
+  "readOnly": false,
+  "embedded": false,
+  "applications": ["gateway", "baby"],
+  "microserviceName": "baby",
+  "clientRootFolder": "baby",
+  "databaseType": "sql",
+  "changelogDate": "20210913140046"
+}
