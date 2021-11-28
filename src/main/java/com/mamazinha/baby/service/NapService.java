@@ -218,6 +218,16 @@ public class NapService {
             .amountOfTimes(maxPlaceEntry.isPresent() ? maxPlaceEntry.get().getValue() : 0l);
     }
 
+    public List<NapDTO> getAllIncompleteNapsByBabyProfile(Long id) {
+        babyProfileService.verifyBabyProfileOwner(id);
+
+        return napRepository
+            .findByBabyProfileIdAndEndIsNullOrderByStartDesc(id)
+            .stream()
+            .map(napMapper::toDto)
+            .collect(Collectors.toList());
+    }
+
     /**
      * Delete the nap by id.
      *

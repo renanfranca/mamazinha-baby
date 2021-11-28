@@ -774,6 +774,53 @@ class NapResourceIT {
             .andExpect(jsonPath("$.amountOfTimes").doesNotExist());
     }
 
+    @Test
+    @Transactional
+    void shouldReturnIncompleteNapsByBabyProfile() throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        int year = 2021;
+        int month = 10;
+        int day = 25;
+
+        mockClockFixed(year, month, day, 16, 30, 00, null);
+
+        //valid
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .end(null)
+                .babyProfile(babyProfile)
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 10, 0, 0, 0, ZoneId.systemDefault()))
+                .end(null)
+                .babyProfile(babyProfile)
+        );
+
+        //invalid
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 14, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 13, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+
+        // when
+        restNapMockMvc
+            .perform(
+                get(ENTITY_API_URL + "/incomplete-naps-by-baby-profile/{id}", babyProfile.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.size()").value(2))
+            .andDo(MockMvcResultHandlers.print());
+    }
+
     private void createValidAndInvalidNapsByDate(Integer year, Integer month, Integer day, BabyProfile babyProfile) {
         // valid
         napRepository.saveAndFlush(

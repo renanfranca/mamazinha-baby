@@ -50,4 +50,6 @@ public interface NapRepository extends JpaRepository<Nap, Long> {
         ZonedDateTime todayMidnight,
         ZonedDateTime tomorrowMidnight
     );
+
+    List<Nap> findByBabyProfileIdAndEndIsNullOrderByStartDesc(Long id);
 }
