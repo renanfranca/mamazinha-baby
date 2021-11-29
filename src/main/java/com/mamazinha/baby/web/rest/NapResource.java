@@ -208,6 +208,12 @@ public class NapResource {
         return ResponseEntity.ok(favoriteNapPlaceDTO);
     }
 
+    @GetMapping("/naps/incomplete-naps-by-baby-profile/{id}")
+    public ResponseEntity<List<NapDTO>> getAllIncompleteNapsByBabyProfile(@PathVariable Long id) {
+        List<NapDTO> napDTOList = napService.getAllIncompleteNapsByBabyProfile(id);
+        return ResponseEntity.ok(napDTOList);
+    }
+
     /**
      * {@code DELETE  /naps/:id} : delete the "id" nap.
      *
