@@ -2,6 +2,8 @@ package com.mamazinha.baby.service;
 
 import com.mamazinha.baby.domain.BreastFeed;
 import com.mamazinha.baby.repository.BreastFeedRepository;
+import com.mamazinha.baby.security.AuthoritiesConstants;
+import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.BreastFeedDTO;
 import com.mamazinha.baby.service.mapper.BreastFeedMapper;
 import java.util.Optional;
@@ -25,9 +27,16 @@ public class BreastFeedService {
 
     private final BreastFeedMapper breastFeedMapper;
 
-    public BreastFeedService(BreastFeedRepository breastFeedRepository, BreastFeedMapper breastFeedMapper) {
+    private final BabyProfileService babyProfileService;
+
+    public BreastFeedService(
+        BreastFeedRepository breastFeedRepository,
+        BreastFeedMapper breastFeedMapper,
+        BabyProfileService babyProfileService
+    ) {
         this.breastFeedRepository = breastFeedRepository;
         this.breastFeedMapper = breastFeedMapper;
+        this.babyProfileService = babyProfileService;
     }
 
     /**
@@ -38,6 +47,7 @@ public class BreastFeedService {
      */
     public BreastFeedDTO save(BreastFeedDTO breastFeedDTO) {
         log.debug("Request to save BreastFeed : {}", breastFeedDTO);
+        babyProfileService.verifyBabyProfileOwner(breastFeedDTO.getBabyProfile());
         BreastFeed breastFeed = breastFeedMapper.toEntity(breastFeedDTO);
         breastFeed = breastFeedRepository.save(breastFeed);
         return breastFeedMapper.toDto(breastFeed);
@@ -55,6 +65,7 @@ public class BreastFeedService {
         return breastFeedRepository
             .findById(breastFeedDTO.getId())
             .map(existingBreastFeed -> {
+                babyProfileService.verifyBabyProfileOwner(existingBreastFeed.getBabyProfile());
                 breastFeedMapper.partialUpdate(existingBreastFeed, breastFeedDTO);
 
                 return existingBreastFeed;
@@ -72,7 +83,14 @@ public class BreastFeedService {
     @Transactional(readOnly = true)
     public Page<BreastFeedDTO> findAll(Pageable pageable) {
         log.debug("Request to get all BreastFeeds");
-        return breastFeedRepository.findAll(pageable).map(breastFeedMapper::toDto);
+        if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) {
+            return breastFeedRepository.findAll(pageable).map(breastFeedMapper::toDto);
+        }
+        Optional<String> userId = SecurityUtils.getCurrentUserId();
+        if (userId.isPresent()) {
+            return breastFeedRepository.findByBabyProfileUserId(pageable, userId.get()).map(breastFeedMapper::toDto);
+        }
+        return Page.empty();
     }
 
     /**
