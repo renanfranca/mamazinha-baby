@@ -277,40 +277,42 @@ public class NapService {
     }
 
     private Double sumTotalNapsInHoursByNapList(List<Nap> napList, ZonedDateTime todayMidnight, ZonedDateTime tomorrowMidnight) {
-        return (
-            napList
-                .stream()
-                .mapToDouble(nap -> {
-                    if (nap.getEnd() == null) {
-                        return 0;
-                    }
-                    if (
-                        (nap.getStart().isEqual(todayMidnight) || nap.getStart().isAfter(todayMidnight)) &&
-                        nap.getStart().isBefore(tomorrowMidnight) &&
-                        nap.getEnd().isAfter(todayMidnight) &&
-                        (nap.getEnd().isEqual(tomorrowMidnight) || nap.getEnd().isBefore(tomorrowMidnight))
-                    ) {
-                        return ChronoUnit.MINUTES.between(nap.getStart(), nap.getEnd());
-                    }
-                    if (
-                        nap.getStart().isBefore(todayMidnight) &&
-                        nap.getEnd().isAfter(todayMidnight) &&
-                        nap.getEnd().isBefore(tomorrowMidnight)
-                    ) {
-                        return ChronoUnit.MINUTES.between(todayMidnight, nap.getEnd());
-                    }
-                    if (
-                        nap.getStart().isAfter(todayMidnight) &&
-                        nap.getStart().isBefore(tomorrowMidnight) &&
-                        nap.getEnd().isAfter(tomorrowMidnight)
-                    ) {
-                        return ChronoUnit.MINUTES.between(nap.getStart(), tomorrowMidnight);
-                    }
+        Double sumTotal =
+            (
+                napList
+                    .stream()
+                    .mapToDouble(nap -> {
+                        if (nap.getEnd() == null) {
+                            return 0;
+                        }
+                        if (
+                            (nap.getStart().isEqual(todayMidnight) || nap.getStart().isAfter(todayMidnight)) &&
+                            nap.getStart().isBefore(tomorrowMidnight) &&
+                            nap.getEnd().isAfter(todayMidnight) &&
+                            (nap.getEnd().isEqual(tomorrowMidnight) || nap.getEnd().isBefore(tomorrowMidnight))
+                        ) {
+                            return ChronoUnit.MINUTES.between(nap.getStart(), nap.getEnd());
+                        }
+                        if (
+                            nap.getStart().isBefore(todayMidnight) &&
+                            nap.getEnd().isAfter(todayMidnight) &&
+                            nap.getEnd().isBefore(tomorrowMidnight)
+                        ) {
+                            return ChronoUnit.MINUTES.between(todayMidnight, nap.getEnd());
+                        }
+                        if (
+                            nap.getStart().isAfter(todayMidnight) &&
+                            nap.getStart().isBefore(tomorrowMidnight) &&
+                            nap.getEnd().isAfter(tomorrowMidnight)
+                        ) {
+                            return ChronoUnit.MINUTES.between(nap.getStart(), tomorrowMidnight);
+                        }
 
-                    return 0;
-                })
-                .sum() /
-            60
-        );
+                        return 0;
+                    })
+                    .sum() /
+                60
+            );
+        return ServiceUtils.maxTwoDecimalPlaces(sumTotal);
     }
 }

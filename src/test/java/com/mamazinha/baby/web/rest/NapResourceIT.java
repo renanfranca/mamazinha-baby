@@ -498,6 +498,47 @@ class NapResourceIT {
     }
 
     @ParameterizedTest
+    @CsvSource({ "0,0,1,22,1.37", "0,0,1,21,1.35", "0,0,1,18,1.3", "0,0,2,0,2" })
+    @Transactional
+    void shouldSumNapsInHoursOfTodayOnlyWithMaxTwoDecimalPlaces(
+        int startHour,
+        int startMinute,
+        int endHour,
+        int endMinute,
+        double expectedValue
+    ) throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        int year = 2021;
+        int month = 9;
+        int day = 20;
+        // valid
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, startHour, startMinute, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, endHour, endMinute, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .place(Place.LAP)
+        );
+        // when
+        URI uri;
+        mockClockFixed(2021, 9, 20, 16, 30, 00, null);
+        uri = new URI(ENTITY_API_URL + "/today-sum-naps-in-hours-by-baby-profile/" + babyProfile.getId());
+
+        restNapMockMvc
+            .perform(
+                get(uri)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.sleepHours").value(expectedValue))
+            .andExpect(jsonPath("$.sleepHoursGoal").value(16));
+    }
+
+    @ParameterizedTest
     @CsvSource(
         {
             "today-sum-naps-in-hours-by-baby-profile, ",
