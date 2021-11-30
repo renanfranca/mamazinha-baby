@@ -1,6 +1,7 @@
 package com.mamazinha.baby.repository;
 
 import com.mamazinha.baby.domain.BreastFeed;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,5 +13,7 @@ import org.springframework.stereotype.Repository;
 @SuppressWarnings("unused")
 @Repository
 public interface BreastFeedRepository extends JpaRepository<BreastFeed, Long> {
-    Page<BreastFeed> findByBabyProfileUserId(Pageable pageable, String string);
+    Page<BreastFeed> findAllByBabyProfileUserId(Pageable pageable, String string);
+
+    List<BreastFeed> findAllByBabyProfileIdAndEndIsNullOrderByStartDesc(Long id);
 }

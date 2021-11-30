@@ -6,7 +6,9 @@ import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.BreastFeedDTO;
 import com.mamazinha.baby.service.mapper.BreastFeedMapper;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -88,7 +90,7 @@ public class BreastFeedService {
         }
         Optional<String> userId = SecurityUtils.getCurrentUserId();
         if (userId.isPresent()) {
-            return breastFeedRepository.findByBabyProfileUserId(pageable, userId.get()).map(breastFeedMapper::toDto);
+            return breastFeedRepository.findAllByBabyProfileUserId(pageable, userId.get()).map(breastFeedMapper::toDto);
         }
         return Page.empty();
     }
@@ -107,6 +109,16 @@ public class BreastFeedService {
             babyProfileService.verifyBabyProfileOwner(breastFeedDTOOptional.get().getBabyProfile());
         }
         return breastFeedDTOOptional;
+    }
+
+    public List<BreastFeedDTO> getAllIncompleteBreastFeedsByBabyProfile(Long id) {
+        babyProfileService.verifyBabyProfileOwner(id);
+
+        return breastFeedRepository
+            .findAllByBabyProfileIdAndEndIsNullOrderByStartDesc(id)
+            .stream()
+            .map(breastFeedMapper::toDto)
+            .collect(Collectors.toList());
     }
 
     /**
