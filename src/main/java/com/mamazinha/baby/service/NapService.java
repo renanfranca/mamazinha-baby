@@ -191,6 +191,7 @@ public class NapService {
             .humorAverage(napList.stream().mapToInt(nap -> nap.getHumor().getValue()).sum() / napList.size());
     }
 
+    @Transactional(readOnly = true)
     public FavoriteNapPlaceDTO getFavoriteNapPlaceFromLastDaysByBabyProfile(Long id, Integer lastDays, String timeZone) {
         babyProfileService.verifyBabyProfileOwner(id);
 
@@ -218,6 +219,7 @@ public class NapService {
             .amountOfTimes(maxPlaceEntry.isPresent() ? maxPlaceEntry.get().getValue() : 0l);
     }
 
+    @Transactional(readOnly = true)
     public List<NapDTO> getAllIncompleteNapsByBabyProfile(Long id) {
         babyProfileService.verifyBabyProfileOwner(id);
 

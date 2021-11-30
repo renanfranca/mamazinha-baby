@@ -111,6 +111,7 @@ public class BreastFeedService {
         return breastFeedDTOOptional;
     }
 
+    @Transactional(readOnly = true)
     public List<BreastFeedDTO> getAllIncompleteBreastFeedsByBabyProfile(Long id) {
         babyProfileService.verifyBabyProfileOwner(id);
 
