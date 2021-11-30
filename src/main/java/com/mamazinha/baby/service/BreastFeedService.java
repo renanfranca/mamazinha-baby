@@ -102,7 +102,11 @@ public class BreastFeedService {
     @Transactional(readOnly = true)
     public Optional<BreastFeedDTO> findOne(Long id) {
         log.debug("Request to get BreastFeed : {}", id);
-        return breastFeedRepository.findById(id).map(breastFeedMapper::toDto);
+        Optional<BreastFeedDTO> breastFeedDTOOptional = breastFeedRepository.findById(id).map(breastFeedMapper::toDto);
+        if (breastFeedDTOOptional.isPresent()) {
+            babyProfileService.verifyBabyProfileOwner(breastFeedDTOOptional.get().getBabyProfile());
+        }
+        return breastFeedDTOOptional;
     }
 
     /**
@@ -112,6 +116,10 @@ public class BreastFeedService {
      */
     public void delete(Long id) {
         log.debug("Request to delete BreastFeed : {}", id);
+        Optional<BreastFeedDTO> breastFeedDTOOptional = breastFeedRepository.findById(id).map(breastFeedMapper::toDto);
+        if (breastFeedDTOOptional.isPresent()) {
+            babyProfileService.verifyBabyProfileOwner(breastFeedDTOOptional.get().getBabyProfile());
+        }
         breastFeedRepository.deleteById(id);
     }
 }
