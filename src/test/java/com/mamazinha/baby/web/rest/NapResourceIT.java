@@ -598,6 +598,29 @@ class NapResourceIT {
             .andExpect(jsonPath("$.sleepHoursGoal").value(16));
     }
 
+    @Test
+    @Transactional
+    void shouldReturnSumNapsInHourByDayFromLastWeekAndCurrentWeekEmptyNaps() throws Exception {
+        // given
+        mockClockFixed(2021, 9, 20, 16, 30, 00, null);
+
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        // when
+        restNapMockMvc
+            .perform(
+                get(ENTITY_API_URL + "/lastweek-currentweek-sum-naps-in-hours-eachday-by-baby-profile/{id}", babyProfile.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.lastWeekNaps.size()").value(7))
+            .andExpect(jsonPath("$.currentWeekNaps.size()").value(7))
+            .andExpect(jsonPath("$.sleepHoursGoal").value(16))
+            .andDo(MockMvcResultHandlers.print());
+    }
+
     @ParameterizedTest
     @CsvSource({ "false", "true" })
     @Transactional

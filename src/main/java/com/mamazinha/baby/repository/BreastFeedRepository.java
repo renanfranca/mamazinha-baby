@@ -1,6 +1,7 @@
 package com.mamazinha.baby.repository;
 
 import com.mamazinha.baby.domain.BreastFeed;
+import java.time.ZonedDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,4 +17,13 @@ public interface BreastFeedRepository extends JpaRepository<BreastFeed, Long> {
     Page<BreastFeed> findAllByBabyProfileUserId(Pageable pageable, String string);
 
     List<BreastFeed> findAllByBabyProfileIdAndEndIsNullOrderByStartDesc(Long id);
+
+    List<BreastFeed> findByBabyProfileIdAndStartBetweenOrBabyProfileIdAndEndBetween(
+        Long babyProfileId,
+        ZonedDateTime todayMidnight,
+        ZonedDateTime tomorrowMidnight,
+        Long babyProfileId2,
+        ZonedDateTime todayMidnight2,
+        ZonedDateTime tomorrowMidnight2
+    );
 }

@@ -5,7 +5,16 @@ import com.mamazinha.baby.repository.BreastFeedRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.BreastFeedDTO;
+import com.mamazinha.baby.service.dto.BreastFeedLastCurrentWeekDTO;
+import com.mamazinha.baby.service.dto.BreastFeedWeekDTO;
 import com.mamazinha.baby.service.mapper.BreastFeedMapper;
+import java.time.Clock;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,14 +40,18 @@ public class BreastFeedService {
 
     private final BabyProfileService babyProfileService;
 
+    private final Clock clock;
+
     public BreastFeedService(
         BreastFeedRepository breastFeedRepository,
         BreastFeedMapper breastFeedMapper,
-        BabyProfileService babyProfileService
+        BabyProfileService babyProfileService,
+        Clock clock
     ) {
         this.breastFeedRepository = breastFeedRepository;
         this.breastFeedMapper = breastFeedMapper;
         this.babyProfileService = babyProfileService;
+        this.clock = clock;
     }
 
     /**
@@ -112,6 +125,32 @@ public class BreastFeedService {
     }
 
     @Transactional(readOnly = true)
+    public BreastFeedLastCurrentWeekDTO getLastWeekCurrentWeekAverageBreastFeedsHoursEachDayByBabyProfile(Long id, String timeZone) {
+        babyProfileService.verifyBabyProfileOwner(id);
+
+        LocalDate nowLocalDate = LocalDate.now(clock);
+        if (timeZone != null) {
+            nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
+        }
+        // Get first day of week
+        LocalDate startOfWeek = nowLocalDate.with(DayOfWeek.MONDAY);
+        // Get last day of week
+        LocalDate endOfWeek = nowLocalDate.with(DayOfWeek.SUNDAY);
+        // Get first day of last week
+        LocalDate startOfLastWeek = startOfWeek.minusDays(1).with(DayOfWeek.MONDAY);
+        // Get last day of last week
+        LocalDate endOfLastWeek = startOfLastWeek.with(DayOfWeek.SUNDAY);
+
+        BreastFeedLastCurrentWeekDTO breastFeedLastCurrentWeekDTO = new BreastFeedLastCurrentWeekDTO();
+        breastFeedLastCurrentWeekDTO.currentWeekBreastFeeds(averageEachDayTotalBreastFeedsInHours(startOfWeek, endOfWeek, id, timeZone));
+        breastFeedLastCurrentWeekDTO.lastWeekBreastFeeds(
+            averageEachDayTotalBreastFeedsInHours(startOfLastWeek, endOfLastWeek, id, timeZone)
+        );
+
+        return breastFeedLastCurrentWeekDTO;
+    }
+
+    @Transactional(readOnly = true)
     public List<BreastFeedDTO> getAllIncompleteBreastFeedsByBabyProfile(Long id) {
         babyProfileService.verifyBabyProfileOwner(id);
 
@@ -134,5 +173,92 @@ public class BreastFeedService {
             babyProfileService.verifyBabyProfileOwner(breastFeedDTOOptional.get().getBabyProfile());
         }
         breastFeedRepository.deleteById(id);
+    }
+
+    private List<BreastFeedWeekDTO> averageEachDayTotalBreastFeedsInHours(
+        LocalDate startDate,
+        LocalDate endDate,
+        Long babyProfileId,
+        String timeZone
+    ) {
+        List<BreastFeedWeekDTO> napWeekDTOList = new ArrayList<>();
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+            napWeekDTOList.add(
+                new BreastFeedWeekDTO()
+                    .dayOfWeek(currentDate.getDayOfWeek().getValue())
+                    .averageFeedHours(averageTotalBreastFeedsInHoursByDate(babyProfileId, timeZone, currentDate))
+            );
+            currentDate = currentDate.plusDays(1);
+        }
+        return napWeekDTOList;
+    }
+
+    private Double averageTotalBreastFeedsInHoursByDate(Long babyProfileId, String timeZone, LocalDate localDate) {
+        ZonedDateTime todayMidnight = ZonedDateTime.of(localDate.atStartOfDay(), ZoneId.systemDefault());
+        ZonedDateTime tomorrowMidnight = ZonedDateTime.of(localDate.plusDays(1l).atStartOfDay(), ZoneId.systemDefault());
+        if (timeZone != null) {
+            todayMidnight = ZonedDateTime.of(localDate.atStartOfDay(), ZoneId.of(timeZone));
+            tomorrowMidnight = ZonedDateTime.of(localDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
+        }
+
+        List<BreastFeed> breastFeedList = breastFeedRepository.findByBabyProfileIdAndStartBetweenOrBabyProfileIdAndEndBetween(
+            babyProfileId,
+            todayMidnight,
+            tomorrowMidnight,
+            babyProfileId,
+            todayMidnight,
+            tomorrowMidnight
+        );
+
+        return averageTotalBreastFeedsInHoursByBreastFeedList(breastFeedList, todayMidnight, tomorrowMidnight);
+    }
+
+    private Double averageTotalBreastFeedsInHoursByBreastFeedList(
+        List<BreastFeed> breastFeedList,
+        ZonedDateTime todayMidnight,
+        ZonedDateTime tomorrowMidnight
+    ) {
+        Double sumTotal =
+            (
+                breastFeedList
+                    .stream()
+                    .mapToDouble(breastFeed -> {
+                        if (breastFeed.getEnd() == null) {
+                            return 0;
+                        }
+                        if (
+                            (breastFeed.getStart().isEqual(todayMidnight) || breastFeed.getStart().isAfter(todayMidnight)) &&
+                            breastFeed.getStart().isBefore(tomorrowMidnight) &&
+                            breastFeed.getEnd().isAfter(todayMidnight) &&
+                            (breastFeed.getEnd().isEqual(tomorrowMidnight) || breastFeed.getEnd().isBefore(tomorrowMidnight))
+                        ) {
+                            return ChronoUnit.MINUTES.between(breastFeed.getStart(), breastFeed.getEnd());
+                        }
+                        if (
+                            breastFeed.getStart().isBefore(todayMidnight) &&
+                            breastFeed.getEnd().isAfter(todayMidnight) &&
+                            breastFeed.getEnd().isBefore(tomorrowMidnight)
+                        ) {
+                            return ChronoUnit.MINUTES.between(todayMidnight, breastFeed.getEnd());
+                        }
+                        if (
+                            breastFeed.getStart().isAfter(todayMidnight) &&
+                            breastFeed.getStart().isBefore(tomorrowMidnight) &&
+                            breastFeed.getEnd().isAfter(tomorrowMidnight)
+                        ) {
+                            return ChronoUnit.MINUTES.between(breastFeed.getStart(), tomorrowMidnight);
+                        }
+
+                        return 0;
+                    })
+                    .sum() /
+                60
+            );
+        if (sumTotal > 0d) {
+            Double average = sumTotal / breastFeedList.size();
+            return ServiceUtils.maxTwoDecimalPlaces(average);
+        }
+        return sumTotal;
     }
 }
