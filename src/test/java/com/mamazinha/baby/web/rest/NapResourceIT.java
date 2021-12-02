@@ -498,7 +498,7 @@ class NapResourceIT {
     }
 
     @ParameterizedTest
-    @CsvSource({ "0,0,1,22,1.37", "0,0,1,21,1.35", "0,0,1,18,1.3", "0,0,2,0,2" })
+    @CsvSource({ "0,0,1,22,1.4", "0,0,1,21,1.4", "0,0,1,18,1.3", "0,0,2,0,2" })
     @Transactional
     void shouldSumNapsInHoursOfTodayOnlyWithMaxTwoDecimalPlaces(
         int startHour,
