@@ -172,6 +172,15 @@ public class BreastFeedResource {
         return ResponseUtil.wrapOrNotFound(breastFeedDTO);
     }
 
+    @GetMapping("/breast-feeds/today-breast-feeds-by-baby-profile/{id}")
+    public ResponseEntity<List<BreastFeedDTO>> getAllTodayBrastFeedsByBabyProfile(
+        @PathVariable Long id,
+        @RequestParam(value = "tz", required = false) String timeZone
+    ) {
+        List<BreastFeedDTO> breastFeedDTOList = breastFeedService.getAllTodayBrastFeedsByBabyProfile(id, timeZone);
+        return ResponseEntity.ok(breastFeedDTOList);
+    }
+
     @GetMapping("/breast-feeds/lastweek-currentweek-average-breast-feeds-in-hours-eachday-by-baby-profile/{id}")
     public ResponseEntity<BreastFeedLastCurrentWeekDTO> getLastWeekCurrentWeekSumNapsHoursEachDayByBabyProfile(
         @PathVariable Long id,

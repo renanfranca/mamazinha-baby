@@ -125,6 +125,26 @@ public class BreastFeedService {
     }
 
     @Transactional(readOnly = true)
+    public List<BreastFeedDTO> getAllTodayBrastFeedsByBabyProfile(Long id, String timeZone) {
+        babyProfileService.verifyBabyProfileOwner(id);
+
+        LocalDate nowLocalDate = LocalDate.now(clock);
+        ZonedDateTime todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.systemDefault());
+        ZonedDateTime tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.systemDefault());
+        if (timeZone != null) {
+            nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
+            todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.of(timeZone));
+            tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
+        }
+
+        return breastFeedRepository
+            .findAllByBabyProfileIdAndStartBetweenAndEndIsNotNull(id, todayMidnight, tomorrowMidnight)
+            .stream()
+            .map(breastFeedMapper::toDto)
+            .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public BreastFeedLastCurrentWeekDTO getLastWeekCurrentWeekAverageBreastFeedsHoursEachDayByBabyProfile(Long id, String timeZone) {
         babyProfileService.verifyBabyProfileOwner(id);
 
@@ -202,7 +222,7 @@ public class BreastFeedService {
             tomorrowMidnight = ZonedDateTime.of(localDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
         }
 
-        List<BreastFeed> breastFeedList = breastFeedRepository.findByBabyProfileIdAndStartBetweenOrBabyProfileIdAndEndBetween(
+        List<BreastFeed> breastFeedList = breastFeedRepository.findAllByBabyProfileIdAndStartBetweenOrBabyProfileIdAndEndBetween(
             babyProfileId,
             todayMidnight,
             tomorrowMidnight,

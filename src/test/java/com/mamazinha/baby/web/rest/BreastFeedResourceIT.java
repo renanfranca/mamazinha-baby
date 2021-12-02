@@ -474,6 +474,42 @@ class BreastFeedResourceIT {
     @ParameterizedTest
     @CsvSource({ "false", "true" })
     @Transactional
+    void shouldReturnTodayBreastFeeds(boolean withTimeZone) throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        int year = 2021;
+        int month = 12;
+        int day = 2;
+
+        //last week
+        createValidAndInvalidBreastFeedsByDate(year, month, day, babyProfile);
+
+        // when
+        URI uri;
+        if (withTimeZone) {
+            String timeZone = "America/Sao_Paulo";
+            mockClockFixed(year, month, day, 16, 30, 00, timeZone);
+            uri = new URI(ENTITY_API_URL + "/today-breast-feeds-by-baby-profile/" + babyProfile.getId() + "?tz=" + timeZone);
+        } else {
+            mockClockFixed(year, month, day, 16, 30, 00, null);
+            uri = new URI(ENTITY_API_URL + "/today-breast-feeds-by-baby-profile/" + babyProfile.getId());
+        }
+        restBreastFeedMockMvc
+            .perform(
+                get(uri)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.size()").value(5))
+            .andDo(MockMvcResultHandlers.print());
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "false", "true" })
+    @Transactional
     void shouldReturnAverageBreastFeedsInHourByDayFromLastWeekAndCurrentWeek(boolean withTimeZone) throws Exception {
         // given
         BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
