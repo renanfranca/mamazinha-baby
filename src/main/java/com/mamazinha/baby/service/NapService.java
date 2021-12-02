@@ -315,6 +315,6 @@ public class NapService {
                     .sum() /
                 60
             );
-        return ServiceUtils.maxTwoDecimalPlaces(sumTotal);
+        return ServiceUtils.maxOneDecimalPlaces(sumTotal);
     }
 }

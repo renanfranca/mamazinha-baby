@@ -277,7 +277,7 @@ public class BreastFeedService {
             );
         if (sumTotal > 0d) {
             Double average = sumTotal / breastFeedList.size();
-            return ServiceUtils.maxTwoDecimalPlaces(average);
+            return ServiceUtils.maxOneDecimalPlaces(average);
         }
         return sumTotal;
     }

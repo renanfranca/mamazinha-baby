@@ -7,11 +7,11 @@ public final class ServiceUtils {
 
     private ServiceUtils() {}
 
-    public static Double maxTwoDecimalPlaces(Double value) {
+    public static Double maxOneDecimalPlaces(Double value) {
         if (value % 1 == 0) {
             return value;
-        } else if (new BigDecimal(Double.toString(value)).scale() > 2) {
-            return DoubleRounder.round(value, 2);
+        } else if (new BigDecimal(Double.toString(value)).scale() > 1) {
+            return DoubleRounder.round(value, 1);
         }
         return value;
     }
