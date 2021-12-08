@@ -644,6 +644,12 @@ class BreastFeedResourceIT {
                 .end(ZonedDateTime.of(year, month, day + 1, 0, 30, 0, 0, ZoneId.systemDefault()))
                 .babyProfile(babyProfile)
         );
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day + 3, 10, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day + 3, 11, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
 
         // invalid
         breastFeedRepository.saveAndFlush(
