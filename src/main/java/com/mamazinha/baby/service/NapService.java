@@ -7,6 +7,7 @@ import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.FavoriteNapPlaceDTO;
 import com.mamazinha.baby.service.dto.HumorAverageDTO;
+import com.mamazinha.baby.service.dto.HumorAverageLastCurrentWeekDTO;
 import com.mamazinha.baby.service.dto.NapDTO;
 import com.mamazinha.baby.service.dto.NapLastCurrentWeekDTO;
 import com.mamazinha.baby.service.dto.NapTodayDTO;
@@ -170,25 +171,30 @@ public class NapService {
             nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
         }
 
-        ZonedDateTime todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.systemDefault());
-        ZonedDateTime tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.systemDefault());
+        return averageNapsHumorByDate(id, timeZone, nowLocalDate);
+    }
+
+    @Transactional(readOnly = true)
+    public HumorAverageLastCurrentWeekDTO getLastCurrentWeekAverageNapsHumorByBabyProfile(Long id, String timeZone) {
+        babyProfileService.verifyBabyProfileOwner(id);
+
+        LocalDate nowLocalDate = LocalDate.now(clock);
         if (timeZone != null) {
-            todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.of(timeZone));
-            tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
+            nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
         }
+        // Get first day of week
+        LocalDate startOfWeek = nowLocalDate.with(DayOfWeek.MONDAY);
+        // Get last day of week
+        LocalDate endOfWeek = nowLocalDate.with(DayOfWeek.SUNDAY);
+        // Get first day of last week
+        LocalDate startOfLastWeek = startOfWeek.minusDays(1).with(DayOfWeek.MONDAY);
+        // Get last day of last week
+        LocalDate endOfLastWeek = startOfLastWeek.with(DayOfWeek.SUNDAY);
 
-        List<Nap> napList = napRepository.findByBabyProfileIdAndStartGreaterThanEqualAndEndLessThanAndHumorNotNull(
-            id,
-            todayMidnight,
-            tomorrowMidnight
-        );
-
-        if (napList.isEmpty()) {
-            return null;
-        }
-        return new HumorAverageDTO()
-            .dayOfWeek(nowLocalDate.getDayOfWeek().getValue())
-            .humorAverage(napList.stream().mapToInt(nap -> nap.getHumor().getValue()).sum() / napList.size());
+        HumorAverageLastCurrentWeekDTO humorAverageLastCurrentWeekDTO = new HumorAverageLastCurrentWeekDTO();
+        humorAverageLastCurrentWeekDTO.currentWeekHumorAverage(averageNapsHumorEachDay(startOfWeek, endOfWeek, id, timeZone));
+        humorAverageLastCurrentWeekDTO.lastWeekHumorAverage(averageNapsHumorEachDay(startOfLastWeek, endOfLastWeek, id, timeZone));
+        return humorAverageLastCurrentWeekDTO;
     }
 
     @Transactional(readOnly = true)
@@ -316,5 +322,37 @@ public class NapService {
                 60
             );
         return ServiceUtils.maxOneDecimalPlaces(sumTotal);
+    }
+
+    private List<HumorAverageDTO> averageNapsHumorEachDay(LocalDate startDate, LocalDate endDate, Long babyProfileId, String timeZone) {
+        List<HumorAverageDTO> humorAverageDTOList = new ArrayList<>();
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+            humorAverageDTOList.add(averageNapsHumorByDate(babyProfileId, timeZone, currentDate));
+            currentDate = currentDate.plusDays(1);
+        }
+        return humorAverageDTOList;
+    }
+
+    private HumorAverageDTO averageNapsHumorByDate(Long id, String timeZone, LocalDate nowLocalDate) {
+        ZonedDateTime todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.systemDefault());
+        ZonedDateTime tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.systemDefault());
+        if (timeZone != null) {
+            todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.of(timeZone));
+            tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
+        }
+
+        List<Nap> napList = napRepository.findByBabyProfileIdAndStartGreaterThanEqualAndEndLessThanAndHumorNotNull(
+            id,
+            todayMidnight,
+            tomorrowMidnight
+        );
+
+        if (napList.isEmpty()) {
+            return new HumorAverageDTO().dayOfWeek(nowLocalDate.getDayOfWeek().getValue()).humorAverage(0);
+        }
+        return new HumorAverageDTO()
+            .dayOfWeek(nowLocalDate.getDayOfWeek().getValue())
+            .humorAverage(napList.stream().mapToInt(nap -> nap.getHumor().getValue()).sum() / napList.size());
     }
 }

@@ -31,6 +31,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -500,7 +501,7 @@ class NapResourceIT {
     @ParameterizedTest
     @CsvSource({ "0,0,1,22,1.4", "0,0,1,21,1.4", "0,0,1,18,1.3", "0,0,2,0,2" })
     @Transactional
-    void shouldSumNapsInHoursOfTodayOnlyWithMaxTwoDecimalPlaces(
+    void shouldSumNapsInHoursOfTodayOnlyWithMaxOneDecimalPlaces(
         int startHour,
         int startMinute,
         int endHour,
@@ -731,8 +732,64 @@ class NapResourceIT {
             )
             // then
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.dayOfWeek").doesNotExist())
-            .andExpect(jsonPath("$.humorAverage").doesNotExist())
+            .andExpect(jsonPath("$.dayOfWeek").value(6))
+            .andExpect(jsonPath("$.humorAverage").value(0))
+            .andDo(MockMvcResultHandlers.print());
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "false", "true" })
+    @Transactional
+    void shouldReturnAverageNapsHumorFromLastWeekAndCurrentWeek(boolean withTimeZone) throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        Humor angryHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(1));
+        Humor sadHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(2));
+        Humor calmHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(3));
+        Humor happyHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(4));
+        Humor excitedHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(5));
+        List<Humor> humorList = Arrays.asList(angryHumor, sadHumor, calmHumor, happyHumor, excitedHumor);
+
+        int year = 2021;
+        int month = 9;
+        int day = 20;
+
+        //last week
+        createValidAndInvalidNapsByDateWithHumor(2021, 9, 13, babyProfile, humorList);
+        createValidAndInvalidNapsByDateWithHumor(2021, 9, 19, babyProfile, humorList);
+
+        //current week
+        createValidAndInvalidNapsByDateWithHumor(2021, 9, 20, babyProfile, humorList);
+        createValidAndInvalidNapsByDateWithHumor(2021, 9, 26, babyProfile, humorList);
+
+        // when
+        URI uri;
+        if (withTimeZone) {
+            String timeZone = "America/Sao_Paulo";
+            mockClockFixed(year, month, day, 16, 30, 00, timeZone);
+            uri =
+                new URI(
+                    ENTITY_API_URL +
+                    "/lastweek-currentweek-average-naps-humor-eachday-by-baby-profile/" +
+                    babyProfile.getId() +
+                    "?tz=" +
+                    timeZone
+                );
+        } else {
+            mockClockFixed(year, month, day, 16, 30, 00, null);
+            uri = new URI(ENTITY_API_URL + "/lastweek-currentweek-average-naps-humor-eachday-by-baby-profile/" + babyProfile.getId());
+        }
+        restNapMockMvc
+            .perform(
+                get(uri)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.lastWeekHumorAverage.size()").value(7))
+            .andExpect(jsonPath("$.currentWeekHumorAverage.size()").value(7))
             .andDo(MockMvcResultHandlers.print());
     }
 
@@ -951,6 +1008,90 @@ class NapResourceIT {
                 .end(null)
                 .babyProfile(babyProfile)
                 .place(Place.BABY_CRIB)
+        );
+    }
+
+    private void createValidAndInvalidNapsByDateWithHumor(
+        Integer year,
+        Integer month,
+        Integer day,
+        BabyProfile babyProfile,
+        List<Humor> humorList
+    ) {
+        // valid
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day - 1, 23, 30, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 0, 30, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .place(Place.LAP)
+                .humor(humorList.get(0))
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 1, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .place(Place.LAP)
+                .humor(humorList.get(2))
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 7, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .place(Place.LAP)
+                .humor(humorList.get(3))
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 10, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 11, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .place(Place.CART)
+                .humor(humorList.get(4))
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 23, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day + 1, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .place(Place.BED)
+                .humor(humorList.get(4))
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 21, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day + 1, 0, 30, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .place(Place.BABY_CRIB)
+                .humor(humorList.get(4))
+        );
+
+        // invalid
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day - 1, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day - 1, 9, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .place(Place.BABY_CONFORT)
+                .humor(humorList.get(1))
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day + 1, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day + 1, 9, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+                .place(Place.BABY_CONFORT)
+                .humor(humorList.get(1))
+        );
+        napRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .end(null)
+                .babyProfile(babyProfile)
+                .place(Place.BABY_CRIB)
+                .humor(humorList.get(1))
         );
     }
 
