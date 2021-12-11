@@ -3,6 +3,7 @@ package com.mamazinha.baby.web.rest;
 import com.mamazinha.baby.repository.HumorHistoryRepository;
 import com.mamazinha.baby.service.HumorHistoryService;
 import com.mamazinha.baby.service.dto.HumorAverageDTO;
+import com.mamazinha.baby.service.dto.HumorAverageLastCurrentWeekDTO;
 import com.mamazinha.baby.service.dto.HumorHistoryDTO;
 import com.mamazinha.baby.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
@@ -166,6 +167,18 @@ public class HumorHistoryResource {
     ) {
         HumorAverageDTO humorAverageDTO = humorHistoryService.getTodayAverageHumorHistoryByBabyProfile(id, timeZone);
         return ResponseEntity.ok(humorAverageDTO);
+    }
+
+    @GetMapping("/humor-histories/lastweek-currentweek-average-humor-history-by-baby-profile/{id}")
+    public ResponseEntity<HumorAverageLastCurrentWeekDTO> getLastCurrentWeekAverageNapsHumorByBabyProfile(
+        @PathVariable Long id,
+        @RequestParam(value = "tz", required = false) String timeZone
+    ) {
+        HumorAverageLastCurrentWeekDTO humorAverageLastCurrentWeekDTO = humorHistoryService.getLastCurrentWeekAverageHumorHistoryByBabyProfile(
+            id,
+            timeZone
+        );
+        return ResponseEntity.ok(humorAverageLastCurrentWeekDTO);
     }
 
     /**

@@ -490,6 +490,42 @@ class HumorHistoryResourceIT {
         int year = 2021;
         int month = 10;
         int day = 24;
+        createValidAndInvalidHumorHistoryByDate(babyProfile, angryHumor, sadHumor, calmHumor, happyHumor, excitedHumor, year, month, day);
+
+        // when
+        URI uri;
+        if (withTimeZone) {
+            String timeZone = "America/Sao_Paulo";
+            mockClockFixed(year, month, day, 16, 30, 00, timeZone);
+            uri = new URI(ENTITY_API_URL + "/today-average-humor-history-by-baby-profile/" + babyProfile.getId() + "?tz=" + timeZone);
+        } else {
+            mockClockFixed(year, month, day, 16, 30, 00, null);
+            uri = new URI(ENTITY_API_URL + "/today-average-humor-history-by-baby-profile/" + babyProfile.getId());
+        }
+        restHumorHistoryMockMvc
+            .perform(
+                get(uri)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.dayOfWeek").value(7))
+            .andExpect(jsonPath("$.humorAverage").value(3))
+            .andDo(MockMvcResultHandlers.print());
+    }
+
+    private void createValidAndInvalidHumorHistoryByDate(
+        BabyProfile babyProfile,
+        Humor angryHumor,
+        Humor sadHumor,
+        Humor calmHumor,
+        Humor happyHumor,
+        Humor excitedHumor,
+        int year,
+        int month,
+        int day
+    ) {
         humorHistoryRepository.saveAndFlush(
             createEntity(em)
                 .date(ZonedDateTime.of(year, month, day, 1, 0, 0, 0, ZoneId.systemDefault()))
@@ -527,16 +563,49 @@ class HumorHistoryResourceIT {
                 .babyProfile(babyProfile)
                 .humor(sadHumor)
         );
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "false", "true" })
+    @Transactional
+    void shouldReturnAverageHumorHistoryFromLastWeekAndCurrentWeek(boolean withTimeZone) throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        Humor angryHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(1));
+        Humor sadHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(2));
+        Humor calmHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(3));
+        Humor happyHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(4));
+        Humor excitedHumor = humorRepository.saveAndFlush(HumorResourceIT.createEntity(em).value(5));
+
+        int year = 2021;
+        int month = 9;
+        int day = 20;
+
+        //last week
+        createValidAndInvalidHumorHistoryByDate(babyProfile, angryHumor, sadHumor, calmHumor, happyHumor, excitedHumor, 2021, 9, 13);
+        createValidAndInvalidHumorHistoryByDate(babyProfile, angryHumor, sadHumor, calmHumor, happyHumor, excitedHumor, 2021, 9, 19);
+
+        //current week
+        createValidAndInvalidHumorHistoryByDate(babyProfile, angryHumor, sadHumor, calmHumor, happyHumor, excitedHumor, 2021, 9, 20);
+        createValidAndInvalidHumorHistoryByDate(babyProfile, angryHumor, sadHumor, calmHumor, happyHumor, excitedHumor, 2021, 9, 26);
 
         // when
         URI uri;
         if (withTimeZone) {
             String timeZone = "America/Sao_Paulo";
             mockClockFixed(year, month, day, 16, 30, 00, timeZone);
-            uri = new URI(ENTITY_API_URL + "/today-average-humor-history-by-baby-profile/" + babyProfile.getId() + "?tz=" + timeZone);
+            uri =
+                new URI(
+                    ENTITY_API_URL +
+                    "/lastweek-currentweek-average-humor-history-by-baby-profile/" +
+                    babyProfile.getId() +
+                    "?tz=" +
+                    timeZone
+                );
         } else {
             mockClockFixed(year, month, day, 16, 30, 00, null);
-            uri = new URI(ENTITY_API_URL + "/today-average-humor-history-by-baby-profile/" + babyProfile.getId());
+            uri = new URI(ENTITY_API_URL + "/lastweek-currentweek-average-humor-history-by-baby-profile/" + babyProfile.getId());
         }
         restHumorHistoryMockMvc
             .perform(
@@ -546,8 +615,8 @@ class HumorHistoryResourceIT {
             // then
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.dayOfWeek").value(7))
-            .andExpect(jsonPath("$.humorAverage").value(3))
+            .andExpect(jsonPath("$.lastWeekHumorAverage.size()").value(7))
+            .andExpect(jsonPath("$.currentWeekHumorAverage.size()").value(7))
             .andDo(MockMvcResultHandlers.print());
     }
 
