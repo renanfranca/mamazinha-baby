@@ -125,7 +125,7 @@ public class WeightService {
         }
 
         return weightRepository
-            .findAllByBabyProfileIdAndDateBetweenOrderByDateDesc(id, daysAgo, tomorrowMidnight)
+            .findAllByBabyProfileIdAndDateBetweenOrderByDateAsc(id, daysAgo, tomorrowMidnight)
             .stream()
             .map(weightMapper::toDto)
             .collect(Collectors.toList());

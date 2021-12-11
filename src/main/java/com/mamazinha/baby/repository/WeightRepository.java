@@ -23,5 +23,5 @@ public interface WeightRepository extends JpaRepository<Weight, Long> {
 
     Optional<Weight> findFirstByBabyProfileIdOrderByDateDesc(Long id);
 
-    List<Weight> findAllByBabyProfileIdAndDateBetweenOrderByDateDesc(Long id, ZonedDateTime tomorrowMidnight, ZonedDateTime daysAgo);
+    List<Weight> findAllByBabyProfileIdAndDateBetweenOrderByDateAsc(Long id, ZonedDateTime tomorrowMidnight, ZonedDateTime daysAgo);
 }
