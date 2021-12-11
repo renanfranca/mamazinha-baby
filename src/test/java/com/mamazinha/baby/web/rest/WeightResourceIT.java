@@ -42,6 +42,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -243,6 +244,43 @@ class WeightResourceIT {
             )
             // then
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @Transactional
+    void getLastWeightsByDaysByBabyProfile() throws Exception {
+        // given
+        Integer year = 2021;
+        Integer month = 10;
+        Integer day = 28;
+        Integer hour = 8;
+        // Initialize the database
+        mockClockFixed(year, month, day, hour, 35, 00);
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+        weightRepository.saveAndFlush(
+            createEntity(em).date((ZonedDateTime.of(year, month, day - 3, hour, 30, 0, 0, ZoneId.systemDefault()))).babyProfile(babyProfile)
+        );
+        weightRepository.saveAndFlush(
+            createEntity(em).date((ZonedDateTime.of(year, month, day - 2, hour, 30, 0, 0, ZoneId.systemDefault()))).babyProfile(babyProfile)
+        );
+        weightRepository.saveAndFlush(
+            createEntity(em).date((ZonedDateTime.of(year, month, day - 1, hour, 30, 0, 0, ZoneId.systemDefault()))).babyProfile(babyProfile)
+        );
+        weightRepository
+            .saveAndFlush(weight.date((ZonedDateTime.of(year, month, day, hour, 30, 0, 0, ZoneId.systemDefault()))))
+            .babyProfile(babyProfile);
+
+        // when
+        restWeightMockMvc
+            .perform(
+                get(ENTITY_API_URL + "/last-weight-by-days-by-baby-profile/{id}?days={days}", babyProfile.getId(), 30)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.size()").value(4))
+            .andDo(MockMvcResultHandlers.print());
     }
 
     @Test
