@@ -166,7 +166,7 @@ public class WeightResource {
         return ResponseEntity.ok(weightDTO.orElse(null));
     }
 
-    @GetMapping("/weights/last-weight-by-days-by-baby-profile/{id}")
+    @GetMapping("/weights/last-weights-by-days-by-baby-profile/{id}")
     public ResponseEntity<List<WeightDTO>> getAllLastWeightsByDaysByBabyProfile(
         @PathVariable Long id,
         @RequestParam(value = "days", required = true) Integer days,
