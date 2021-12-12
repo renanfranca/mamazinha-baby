@@ -14,12 +14,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.mamazinha.baby.IntegrationTest;
+import com.mamazinha.baby.domain.BabyProfile;
 import com.mamazinha.baby.domain.BreastFeed;
 import com.mamazinha.baby.domain.enumeration.Pain;
+import com.mamazinha.baby.repository.BabyProfileRepository;
 import com.mamazinha.baby.repository.BreastFeedRepository;
+import com.mamazinha.baby.security.CustomUser;
 import com.mamazinha.baby.service.dto.BreastFeedDTO;
 import com.mamazinha.baby.service.mapper.BreastFeedMapper;
+import java.net.URI;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -29,11 +36,17 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -73,6 +86,12 @@ class BreastFeedResourceIT {
 
     private BreastFeed breastFeed;
 
+    @MockBean
+    private Clock clock;
+
+    @Autowired
+    private BabyProfileRepository babyProfileRepository;
+
     /**
      * Create an entity for this test.
      *
@@ -97,6 +116,8 @@ class BreastFeedResourceIT {
 
     @BeforeEach
     public void initTest() {
+        Mockito.when(clock.instant()).thenReturn(Clock.systemDefaultZone().instant());
+        Mockito.when(clock.getZone()).thenReturn(Clock.systemDefaultZone().getZone());
         breastFeed = createEntity(em);
     }
 
@@ -448,5 +469,222 @@ class BreastFeedResourceIT {
         // Validate the database contains one less item
         List<BreastFeed> breastFeedList = breastFeedRepository.findAll();
         assertThat(breastFeedList).hasSize(databaseSizeBeforeDelete - 1);
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "false", "true" })
+    @Transactional
+    void shouldReturnTodayBreastFeeds(boolean withTimeZone) throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        int year = 2021;
+        int month = 12;
+        int day = 2;
+
+        //last week
+        createValidAndInvalidBreastFeedsByDate(year, month, day, babyProfile);
+
+        // when
+        URI uri;
+        if (withTimeZone) {
+            String timeZone = "America/Sao_Paulo";
+            mockClockFixed(year, month, day, 16, 30, 00, timeZone);
+            uri = new URI(ENTITY_API_URL + "/today-breast-feeds-by-baby-profile/" + babyProfile.getId() + "?tz=" + timeZone);
+        } else {
+            mockClockFixed(year, month, day, 16, 30, 00, null);
+            uri = new URI(ENTITY_API_URL + "/today-breast-feeds-by-baby-profile/" + babyProfile.getId());
+        }
+        restBreastFeedMockMvc
+            .perform(
+                get(uri)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.size()").value(5))
+            .andDo(MockMvcResultHandlers.print());
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "false", "true" })
+    @Transactional
+    void shouldReturnAverageBreastFeedsInHourByDayFromLastWeekAndCurrentWeek(boolean withTimeZone) throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        int year = 2021;
+        int month = 9;
+        int day = 20;
+
+        //last week
+        createValidAndInvalidBreastFeedsByDate(year, month, 13, babyProfile);
+        createValidAndInvalidBreastFeedsByDate(year, month, 19, babyProfile);
+
+        //current week
+        createValidAndInvalidBreastFeedsByDate(year, month, 20, babyProfile);
+        createValidAndInvalidBreastFeedsByDate(year, month, 26, babyProfile);
+
+        // when
+        URI uri;
+        if (withTimeZone) {
+            String timeZone = "America/Sao_Paulo";
+            mockClockFixed(year, month, day, 16, 30, 00, timeZone);
+            uri =
+                new URI(
+                    ENTITY_API_URL +
+                    "/lastweek-currentweek-average-breast-feeds-in-hours-eachday-by-baby-profile/" +
+                    babyProfile.getId() +
+                    "?tz=" +
+                    timeZone
+                );
+        } else {
+            mockClockFixed(year, month, day, 16, 30, 00, null);
+            uri =
+                new URI(
+                    ENTITY_API_URL + "/lastweek-currentweek-average-breast-feeds-in-hours-eachday-by-baby-profile/" + babyProfile.getId()
+                );
+        }
+        restBreastFeedMockMvc
+            .perform(
+                get(uri)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.lastWeekBreastFeeds.size()").value(7))
+            .andExpect(jsonPath("$.currentWeekBreastFeeds.size()").value(7))
+            .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    @Transactional
+    void shouldReturnIncompleteNapsByBabyProfile() throws Exception {
+        // given
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+
+        int year = 2021;
+        int month = 10;
+        int day = 25;
+
+        mockClockFixed(year, month, day, 16, 30, 00, null);
+
+        //valid
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .end(null)
+                .babyProfile(babyProfile)
+        );
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 10, 0, 0, 0, ZoneId.systemDefault()))
+                .end(null)
+                .babyProfile(babyProfile)
+        );
+
+        //invalid
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 14, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 13, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+
+        // when
+        restBreastFeedMockMvc
+            .perform(
+                get(ENTITY_API_URL + "/incomplete-breast-feeds-by-baby-profile/{id}", babyProfile.getId())
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.size()").value(2))
+            .andDo(MockMvcResultHandlers.print());
+    }
+
+    private void createValidAndInvalidBreastFeedsByDate(Integer year, Integer month, Integer day, BabyProfile babyProfile) {
+        // valid
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day - 1, 23, 30, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 0, 30, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 1, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 7, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 10, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day, 11, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 23, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day + 1, 0, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 21, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day + 1, 0, 30, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day + 3, 10, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day + 3, 11, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+
+        // invalid
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day - 1, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day - 1, 9, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day + 1, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .end(ZonedDateTime.of(year, month, day + 1, 9, 0, 0, 0, ZoneId.systemDefault()))
+                .babyProfile(babyProfile)
+        );
+        breastFeedRepository.saveAndFlush(
+            createEntity(em)
+                .start(ZonedDateTime.of(year, month, day, 8, 0, 0, 0, ZoneId.systemDefault()))
+                .end(null)
+                .babyProfile(babyProfile)
+        );
+    }
+
+    private void mockClockFixed(Integer year, Integer month, Integer day, Integer hour, Integer minute, Integer second, String timeZone) {
+        LocalDateTime dataTimeFixedAtTest;
+        if (hour != null && minute != null && second != null) {
+            dataTimeFixedAtTest = LocalDateTime.of(year, month, day, hour, minute, second);
+        } else {
+            dataTimeFixedAtTest = LocalDate.of(year, month, day).atStartOfDay();
+        }
+        Clock fixedClock = Clock.fixed(dataTimeFixedAtTest.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+
+        Mockito.when(clock.instant()).thenReturn(fixedClock.instant());
+        Mockito.when(clock.getZone()).thenReturn(fixedClock.getZone());
+        if (timeZone != null) {
+            Mockito.when(clock.withZone(ZoneId.of(timeZone))).thenReturn(fixedClock);
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.mamazinha.baby.web.rest;
 import com.mamazinha.baby.repository.BreastFeedRepository;
 import com.mamazinha.baby.service.BreastFeedService;
 import com.mamazinha.baby.service.dto.BreastFeedDTO;
+import com.mamazinha.baby.service.dto.BreastFeedLastCurrentWeekDTO;
 import com.mamazinha.baby.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -15,9 +16,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
@@ -161,6 +170,33 @@ public class BreastFeedResource {
         log.debug("REST request to get BreastFeed : {}", id);
         Optional<BreastFeedDTO> breastFeedDTO = breastFeedService.findOne(id);
         return ResponseUtil.wrapOrNotFound(breastFeedDTO);
+    }
+
+    @GetMapping("/breast-feeds/today-breast-feeds-by-baby-profile/{id}")
+    public ResponseEntity<List<BreastFeedDTO>> getAllTodayBrastFeedsByBabyProfile(
+        @PathVariable Long id,
+        @RequestParam(value = "tz", required = false) String timeZone
+    ) {
+        List<BreastFeedDTO> breastFeedDTOList = breastFeedService.getAllTodayBrastFeedsByBabyProfile(id, timeZone);
+        return ResponseEntity.ok(breastFeedDTOList);
+    }
+
+    @GetMapping("/breast-feeds/lastweek-currentweek-average-breast-feeds-in-hours-eachday-by-baby-profile/{id}")
+    public ResponseEntity<BreastFeedLastCurrentWeekDTO> getLastWeekCurrentWeekSumNapsHoursEachDayByBabyProfile(
+        @PathVariable Long id,
+        @RequestParam(value = "tz", required = false) String timeZone
+    ) {
+        BreastFeedLastCurrentWeekDTO breastFeedLastCurrentWeekDTO = breastFeedService.getLastWeekCurrentWeekAverageBreastFeedsHoursEachDayByBabyProfile(
+            id,
+            timeZone
+        );
+        return ResponseEntity.ok(breastFeedLastCurrentWeekDTO);
+    }
+
+    @GetMapping("/breast-feeds/incomplete-breast-feeds-by-baby-profile/{id}")
+    public ResponseEntity<List<BreastFeedDTO>> getAllIncompleteBreastFeedsByBabyProfile(@PathVariable Long id) {
+        List<BreastFeedDTO> breastFeedDTOList = breastFeedService.getAllIncompleteBreastFeedsByBabyProfile(id);
+        return ResponseEntity.ok(breastFeedDTOList);
     }
 
     /**

@@ -7,7 +7,7 @@
 
     <groupId>com.mamazinha.baby</groupId>
     <artifactId>baby</artifactId>
-    <version>1.1.0</version>
+    <version>2.0.0</version>
     <packaging>jar</packaging>
     <name>Baby</name>
 
@@ -337,6 +337,12 @@
             <artifactId>metrics-core</artifactId>
         </dependency>
         <!-- jhipster-needle-maven-add-dependency -->
+        <dependency>
+            <groupId>org.decimal4j</groupId>
+            <artifactId>decimal4j</artifactId>
+            <version>1.0.3</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>

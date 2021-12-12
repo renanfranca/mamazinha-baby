@@ -6,7 +6,13 @@ import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.WeightDTO;
 import com.mamazinha.baby.service.mapper.WeightMapper;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -29,10 +35,13 @@ public class WeightService {
 
     private final BabyProfileService babyProfileService;
 
-    public WeightService(WeightRepository weightRepository, WeightMapper weightMapper, BabyProfileService babyProfileService) {
+    private final Clock clock;
+
+    public WeightService(WeightRepository weightRepository, WeightMapper weightMapper, BabyProfileService babyProfileService, Clock clock) {
         this.weightRepository = weightRepository;
         this.weightMapper = weightMapper;
         this.babyProfileService = babyProfileService;
+        this.clock = clock;
     }
 
     /**
@@ -97,6 +106,29 @@ public class WeightService {
             return weightRepository.findFirstByBabyProfileIdOrderByDateDesc(id).map(weightMapper::toDto);
         }
         return Optional.ofNullable(new WeightDTO());
+    }
+
+    @Transactional(readOnly = true)
+    public List<WeightDTO> findAllLastWeightsByDaysByBabyProfile(Long id, Integer days, String timeZone) {
+        babyProfileService.verifyBabyProfileOwner(id);
+
+        LocalDate nowLocalDate = LocalDate.now(clock);
+        if (timeZone != null) {
+            nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
+        }
+
+        ZonedDateTime tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.systemDefault());
+        ZonedDateTime daysAgo = ZonedDateTime.of(nowLocalDate.minusDays(days + 1l).atStartOfDay(), ZoneId.systemDefault());
+        if (timeZone != null) {
+            tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
+            daysAgo = ZonedDateTime.of(nowLocalDate.minusDays(days + 1l).atStartOfDay(), ZoneId.of(timeZone));
+        }
+
+        return weightRepository
+            .findAllByBabyProfileIdAndDateBetweenOrderByDateAsc(id, daysAgo, tomorrowMidnight)
+            .stream()
+            .map(weightMapper::toDto)
+            .collect(Collectors.toList());
     }
 
     /**

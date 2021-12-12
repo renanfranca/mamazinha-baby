@@ -4,6 +4,7 @@ import com.mamazinha.baby.repository.NapRepository;
 import com.mamazinha.baby.service.NapService;
 import com.mamazinha.baby.service.dto.FavoriteNapPlaceDTO;
 import com.mamazinha.baby.service.dto.HumorAverageDTO;
+import com.mamazinha.baby.service.dto.HumorAverageLastCurrentWeekDTO;
 import com.mamazinha.baby.service.dto.NapDTO;
 import com.mamazinha.baby.service.dto.NapLastCurrentWeekDTO;
 import com.mamazinha.baby.service.dto.NapTodayDTO;
@@ -187,6 +188,18 @@ public class NapResource {
     ) {
         NapLastCurrentWeekDTO napLastCurrentWeekDTO = napService.getLastWeekCurrentWeekSumNapsHoursEachDayByBabyProfile(id, timeZone);
         return ResponseEntity.ok(napLastCurrentWeekDTO);
+    }
+
+    @GetMapping("/naps/lastweek-currentweek-average-naps-humor-eachday-by-baby-profile/{id}")
+    public ResponseEntity<HumorAverageLastCurrentWeekDTO> getLastCurrentWeekAverageNapsHumorByBabyProfile(
+        @PathVariable Long id,
+        @RequestParam(value = "tz", required = false) String timeZone
+    ) {
+        HumorAverageLastCurrentWeekDTO humorAverageLastCurrentWeekDTO = napService.getLastCurrentWeekAverageNapsHumorByBabyProfile(
+            id,
+            timeZone
+        );
+        return ResponseEntity.ok(humorAverageLastCurrentWeekDTO);
     }
 
     @GetMapping("/naps/today-average-nap-humor-by-baby-profile/{id}")

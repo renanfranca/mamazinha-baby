@@ -21,6 +21,7 @@ import com.mamazinha.baby.repository.WeightRepository;
 import com.mamazinha.baby.security.CustomUser;
 import com.mamazinha.baby.service.dto.WeightDTO;
 import com.mamazinha.baby.service.mapper.WeightMapper;
+import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -34,6 +35,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -42,6 +45,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -245,6 +249,55 @@ class WeightResourceIT {
             .andExpect(status().isForbidden());
     }
 
+    @ParameterizedTest
+    @CsvSource({ "false", "true" })
+    @Transactional
+    void getLastWeightsByDaysByBabyProfile(boolean withTimeZone) throws Exception {
+        // given
+        Integer year = 2021;
+        Integer month = 10;
+        Integer day = 28;
+        Integer hour = 8;
+        // Initialize the database
+        BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
+        weightRepository.saveAndFlush(
+            createEntity(em).date((ZonedDateTime.of(year, month, day - 3, hour, 30, 0, 0, ZoneId.systemDefault()))).babyProfile(babyProfile)
+        );
+        weightRepository.saveAndFlush(
+            createEntity(em).date((ZonedDateTime.of(year, month, day - 2, hour, 30, 0, 0, ZoneId.systemDefault()))).babyProfile(babyProfile)
+        );
+        weightRepository.saveAndFlush(
+            createEntity(em).date((ZonedDateTime.of(year, month, day - 1, hour, 30, 0, 0, ZoneId.systemDefault()))).babyProfile(babyProfile)
+        );
+        weightRepository
+            .saveAndFlush(weight.date((ZonedDateTime.of(year, month, day, hour, 30, 0, 0, ZoneId.systemDefault()))))
+            .babyProfile(babyProfile);
+
+        // when
+        URI uri;
+        if (withTimeZone) {
+            String timeZone = "America/Sao_Paulo";
+            mockClockFixed(year, month, day, hour, 35, 00, timeZone);
+            uri =
+                new URI(
+                    ENTITY_API_URL + "/last-weights-by-days-by-baby-profile/" + babyProfile.getId() + "?tz=" + timeZone + "&days=" + 30
+                );
+        } else {
+            mockClockFixed(year, month, day, hour, 35, 00, null);
+            uri = new URI(ENTITY_API_URL + "/last-weights-by-days-by-baby-profile/" + babyProfile.getId() + "?days=" + 30);
+        }
+        restWeightMockMvc
+            .perform(
+                get(uri)
+                    .with(SecurityMockMvcRequestPostProcessors.user(new CustomUser("user", "1234", babyProfile.getUserId(), "ROLE_USER")))
+            )
+            // then
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.size()").value(4))
+            .andDo(MockMvcResultHandlers.print());
+    }
+
     @Test
     @Transactional
     void getLatestWeightByBabyProfile() throws Exception {
@@ -254,7 +307,7 @@ class WeightResourceIT {
         Integer day = 28;
         Integer hour = 8;
         // Initialize the database
-        mockClockFixed(year, month, day, hour, 35, 00);
+        mockClockFixed(year, month, day, hour, 35, 00, null);
         BabyProfile babyProfile = babyProfileRepository.saveAndFlush(BabyProfileResourceIT.createEntity(em));
         weightRepository.saveAndFlush(
             createEntity(em).date((ZonedDateTime.of(year, month, day - 3, hour, 30, 0, 0, ZoneId.systemDefault()))).babyProfile(babyProfile)
@@ -562,7 +615,7 @@ class WeightResourceIT {
         assertThat(weightList).hasSize(databaseSizeBeforeDelete - 1);
     }
 
-    private void mockClockFixed(Integer year, Integer month, Integer day, Integer hour, Integer minute, Integer second) {
+    private void mockClockFixed(Integer year, Integer month, Integer day, Integer hour, Integer minute, Integer second, String timeZone) {
         LocalDateTime dataTimeFixedAtTest;
         if (hour != null && minute != null && second != null) {
             dataTimeFixedAtTest = LocalDateTime.of(year, month, day, hour, minute, second);
@@ -573,5 +626,8 @@ class WeightResourceIT {
 
         Mockito.when(clock.instant()).thenReturn(fixedClock.instant());
         Mockito.when(clock.getZone()).thenReturn(fixedClock.getZone());
+        if (timeZone != null) {
+            Mockito.when(clock.withZone(ZoneId.of(timeZone))).thenReturn(fixedClock);
+        }
     }
 }

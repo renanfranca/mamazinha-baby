@@ -6,7 +6,13 @@ import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.HeightDTO;
 import com.mamazinha.baby.service.mapper.HeightMapper;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -29,10 +35,13 @@ public class HeightService {
 
     private final BabyProfileService babyProfileService;
 
-    public HeightService(HeightRepository heightRepository, HeightMapper heightMapper, BabyProfileService babyProfileService) {
+    private final Clock clock;
+
+    public HeightService(HeightRepository heightRepository, HeightMapper heightMapper, BabyProfileService babyProfileService, Clock clock) {
         this.heightRepository = heightRepository;
         this.heightMapper = heightMapper;
         this.babyProfileService = babyProfileService;
+        this.clock = clock;
     }
 
     /**
@@ -97,6 +106,28 @@ public class HeightService {
             return heightRepository.findFirstByBabyProfileIdOrderByDateDesc(id).map(heightMapper::toDto);
         }
         return Optional.ofNullable(new HeightDTO());
+    }
+
+    public List<HeightDTO> findAllLastHeightsByDaysByBabyProfile(Long id, Integer days, String timeZone) {
+        babyProfileService.verifyBabyProfileOwner(id);
+
+        LocalDate nowLocalDate = LocalDate.now(clock);
+        if (timeZone != null) {
+            nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
+        }
+
+        ZonedDateTime tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.systemDefault());
+        ZonedDateTime daysAgo = ZonedDateTime.of(nowLocalDate.minusDays(days + 1l).atStartOfDay(), ZoneId.systemDefault());
+        if (timeZone != null) {
+            tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.of(timeZone));
+            daysAgo = ZonedDateTime.of(nowLocalDate.minusDays(days + 1l).atStartOfDay(), ZoneId.of(timeZone));
+        }
+
+        return heightRepository
+            .findAllByBabyProfileIdAndDateBetweenOrderByDateAsc(id, daysAgo, tomorrowMidnight)
+            .stream()
+            .map(heightMapper::toDto)
+            .collect(Collectors.toList());
     }
 
     /**

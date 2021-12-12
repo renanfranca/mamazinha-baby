@@ -1,6 +1,8 @@
 package com.mamazinha.baby.repository;
 
 import com.mamazinha.baby.domain.Weight;
+import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,4 +22,6 @@ public interface WeightRepository extends JpaRepository<Weight, Long> {
     boolean existsByBabyProfileIdAndBabyProfileUserId(Long id, String userId);
 
     Optional<Weight> findFirstByBabyProfileIdOrderByDateDesc(Long id);
+
+    List<Weight> findAllByBabyProfileIdAndDateBetweenOrderByDateAsc(Long id, ZonedDateTime tomorrowMidnight, ZonedDateTime daysAgo);
 }

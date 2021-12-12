@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
@@ -163,6 +164,16 @@ public class WeightResource {
     public ResponseEntity<WeightDTO> getLatestWeight(@PathVariable Long id) {
         Optional<WeightDTO> weightDTO = weightService.findLatestByBabyProfile(id);
         return ResponseEntity.ok(weightDTO.orElse(null));
+    }
+
+    @GetMapping("/weights/last-weights-by-days-by-baby-profile/{id}")
+    public ResponseEntity<List<WeightDTO>> getAllLastWeightsByDaysByBabyProfile(
+        @PathVariable Long id,
+        @RequestParam(value = "days", required = true) Integer days,
+        @RequestParam(value = "tz", required = false) String timeZone
+    ) {
+        List<WeightDTO> weightDTOList = weightService.findAllLastWeightsByDaysByBabyProfile(id, days, timeZone);
+        return ResponseEntity.ok(weightDTOList);
     }
 
     /**

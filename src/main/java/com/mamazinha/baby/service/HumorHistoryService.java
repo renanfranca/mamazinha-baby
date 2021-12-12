@@ -5,12 +5,15 @@ import com.mamazinha.baby.repository.HumorHistoryRepository;
 import com.mamazinha.baby.security.AuthoritiesConstants;
 import com.mamazinha.baby.security.SecurityUtils;
 import com.mamazinha.baby.service.dto.HumorAverageDTO;
+import com.mamazinha.baby.service.dto.HumorAverageLastCurrentWeekDTO;
 import com.mamazinha.baby.service.dto.HumorHistoryDTO;
 import com.mamazinha.baby.service.mapper.HumorHistoryMapper;
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -128,6 +131,43 @@ public class HumorHistoryService {
             nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
         }
 
+        return averageHumorHistoryByDate(id, timeZone, nowLocalDate);
+    }
+
+    @Transactional(readOnly = true)
+    public HumorAverageLastCurrentWeekDTO getLastCurrentWeekAverageHumorHistoryByBabyProfile(Long id, String timeZone) {
+        babyProfileService.verifyBabyProfileOwner(id);
+
+        LocalDate nowLocalDate = LocalDate.now(clock);
+        if (timeZone != null) {
+            nowLocalDate = LocalDate.now(clock.withZone(ZoneId.of(timeZone)));
+        }
+        // Get first day of week
+        LocalDate startOfWeek = nowLocalDate.with(DayOfWeek.MONDAY);
+        // Get last day of week
+        LocalDate endOfWeek = nowLocalDate.with(DayOfWeek.SUNDAY);
+        // Get first day of last week
+        LocalDate startOfLastWeek = startOfWeek.minusDays(1).with(DayOfWeek.MONDAY);
+        // Get last day of last week
+        LocalDate endOfLastWeek = startOfLastWeek.with(DayOfWeek.SUNDAY);
+
+        HumorAverageLastCurrentWeekDTO humorAverageLastCurrentWeekDTO = new HumorAverageLastCurrentWeekDTO();
+        humorAverageLastCurrentWeekDTO.currentWeekHumorAverage(averageNapsHumorEachDay(startOfWeek, endOfWeek, id, timeZone));
+        humorAverageLastCurrentWeekDTO.lastWeekHumorAverage(averageNapsHumorEachDay(startOfLastWeek, endOfLastWeek, id, timeZone));
+        return humorAverageLastCurrentWeekDTO;
+    }
+
+    private List<HumorAverageDTO> averageNapsHumorEachDay(LocalDate startDate, LocalDate endDate, Long babyProfileId, String timeZone) {
+        List<HumorAverageDTO> humorAverageDTOList = new ArrayList<>();
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+            humorAverageDTOList.add(averageHumorHistoryByDate(babyProfileId, timeZone, currentDate));
+            currentDate = currentDate.plusDays(1);
+        }
+        return humorAverageDTOList;
+    }
+
+    private HumorAverageDTO averageHumorHistoryByDate(Long id, String timeZone, LocalDate nowLocalDate) {
         ZonedDateTime todayMidnight = ZonedDateTime.of(nowLocalDate.atStartOfDay(), ZoneId.systemDefault());
         ZonedDateTime tomorrowMidnight = ZonedDateTime.of(nowLocalDate.plusDays(1l).atStartOfDay(), ZoneId.systemDefault());
         if (timeZone != null) {
@@ -142,7 +182,7 @@ public class HumorHistoryService {
         );
 
         if (humorHistoryList.isEmpty()) {
-            return null;
+            return new HumorAverageDTO().dayOfWeek(nowLocalDate.getDayOfWeek().getValue()).humorAverage(0);
         }
         return new HumorAverageDTO()
             .dayOfWeek(nowLocalDate.getDayOfWeek().getValue())
