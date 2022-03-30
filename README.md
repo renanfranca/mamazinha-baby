@@ -1,3 +1,25 @@
+<h1 align="center">
+  Mamazinha Baby Care 🍭
+</h1>
+
+<p align="center">
+<a href="https://github.com/renanfranca/mamazinha-baby/blob/main/LICENSE.txt" target="blank">
+<img src="https://img.shields.io/github/license/renanfranca/mamazinha-baby?style=flat-square" alt="mamazinha-baby license" />
+</a>
+<a href="https://github.com/renanfranca/mamazinha-baby/fork" target="blank">
+<img src="https://img.shields.io/github/forks/renanfranca/mamazinha-baby?style=flat-square" alt="mamazinha-baby forks"" alt="github-profile-readme-generator forks"/>
+</a>
+<a href="https://github.com/renanfranca/mamazinha-baby/stargazers" target="blank">
+<img src="https://img.shields.io/github/stars/renanfranca/mamazinha-baby?style=flat-square" alt="mamazinha-baby stars"/>
+</a>
+<a href="https://github.com/renanfranca/mamazinha-baby/issues" target="blank">
+<img src="https://img.shields.io/github/issues/renanfranca/mamazinha-baby?style=flat-square" alt="mamazinha-baby issues"/>
+</a>
+<a href="https://github.com/renanfranca/mamazinha-baby/pulls" target="blank">
+<img src="https://img.shields.io/github/issues-pr/renanfranca/mamazinha-baby?style=flat-square" alt="mamazinha-baby pull-requests"/>
+</a>
+</p>
+
 # baby
 
 This application was generated using JHipster 7.2.0, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v7.2.0](https://www.jhipster.tech/documentation-archive/v7.2.0).
