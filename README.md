@@ -1,7 +1,6 @@
-<h1 align="center">
-  Mamazinha Baby Care 🍭
-</h1>
-
+<p align="center">
+  <img src="https://renanfranca.github.io/img/mamazinha-baby-care/github-mamazinha-baby-image_readme.png" />
+</p>
 <p align="center">
 <a href="https://github.com/renanfranca/mamazinha-baby/blob/main/LICENSE.txt" target="blank">
 <img src="https://img.shields.io/github/license/renanfranca/mamazinha-baby?style=flat-square" alt="mamazinha-baby license" />
