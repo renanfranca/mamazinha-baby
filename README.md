@@ -19,6 +19,9 @@
 </a>
 </p>
 
+# ⭐
+**If you like this project, please 🌟 this repository! For feedback, feel free to create an issue on this repository.**
+
 # baby
 
 This application was generated using JHipster 7.2.0, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v7.2.0](https://www.jhipster.tech/documentation-archive/v7.2.0).
