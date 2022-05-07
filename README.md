@@ -22,6 +22,10 @@
 # ⭐
 **If you like this project, please 🌟 this repository! For feedback, feel free to create an issue on this repository.**
 
+# 📖 About
+![cover image](https://renanfranca.github.io/img/postbanners/2022-04-23-cover-built-baby-care-web-app.jpeg)
+[**I built a Baby Care web app using JHipster (open source from now on 🥰)**](https://renanfranca.github.io/i-built-a-baby-care-web-app-using-jhipster.html)
+
 # baby
 
 This application was generated using JHipster 7.2.0, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v7.2.0](https://www.jhipster.tech/documentation-archive/v7.2.0).
