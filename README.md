@@ -20,7 +20,9 @@
 </p>
 
 # ⭐
-**If you like this project, please 🌟 this repository! For feedback, feel free to create an issue on this repository.**
+**If you like this project, please, considering give it a star 🌟 to support me and enhanced this repository's visibility 🤩!**
+
+For feedback, feel free to create an issue on this repository.
 
 # 📖 About
 ![cover image](https://renanfranca.github.io/img/postbanners/2022-04-23-cover-built-baby-care-web-app.jpeg)
