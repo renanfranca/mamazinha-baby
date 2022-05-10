@@ -28,7 +28,7 @@ For feedback, feel free to create an issue on this repository.
 <p align="center">
   <a href="https://renanfranca.github.io/i-built-a-baby-care-web-app-using-jhipster.html"><img src="https://renanfranca.github.io/img/mamazinha-baby-care/github-blog-post-cover_rounded_corner_readme.png?v=1234"/></a>
 </p>
-<h2><strong><a href="https://renanfranca.github.io/i-built-a-baby-care-web-app-using-jhipster.html">I built a Baby Care web app using JHipster (open source from now on 🥰)</a></strong></h2>
+<h2 align="center"><strong><a href="https://renanfranca.github.io/i-built-a-baby-care-web-app-using-jhipster.html">I built a Baby Care web app using JHipster (open source from now on 🥰)</a></strong></h2>
 
 <p align="center">
   <img src="https://renanfranca.github.io/img/badge/works-with-openjdk-badge.png" />
