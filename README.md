@@ -32,8 +32,6 @@ For feedback, feel free to create an issue on this repository.
   <img src="https://renanfranca.github.io/img/badge/works-with-openjdk-badge.png" />
 </p>
 
-![openjdk-badge](https://renanfranca.github.io/img/badge/works-with-openjdk-badge.png)
-
 # baby
 
 This application was generated using JHipster 7.2.0, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v7.2.0](https://www.jhipster.tech/documentation-archive/v7.2.0).
